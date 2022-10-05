@@ -14,8 +14,7 @@ public class MeshGeneratorTriangles : MonoBehaviour
         //m_Mf.mesh = this.CreateTriangle();
         //m_Mf.mesh = this.CreateQuad(new Vector3(1, 0, 2));
         //m_Mf.mesh = this.CreateStrip(16, new Vector3(1, 0, 8));
-        m_Mf.mesh = this.CreateGridXZ(16, 16, new Vector3(8, 0, 8));
-        //m_Mf.mesh = this.CreateGridXZ2(16, 16, new Vector3(8, 0, 8));
+        //m_Mf.mesh = this.CreateGridXZ(16, 16, new Vector3(8, 0, 8));
     }
 
     Mesh CreateTriangle()
@@ -104,7 +103,6 @@ public class MeshGeneratorTriangles : MonoBehaviour
         return mesh;
     }
 
-    // Create a grid mesh XY with nSegmentsX and nSegmentsZ and triangles
     Mesh CreateGridXZ(int nSegmentsX, int nSegmentsZ, Vector3 halfSize){
         Mesh mesh = new Mesh();
         mesh.name = "grid";

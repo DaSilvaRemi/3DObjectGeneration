@@ -37,7 +37,7 @@ public class MeshGeneratorQuad : MonoBehaviour
         index = 0;
         for (int i = 0; i < nSegments; i++)
         {
-            quads[index++] = 2 * i; // Vertices cr��s : |/|/|/|/
+            quads[index++] = 2 * i; // Vertices créés : |/|/|/|/
             quads[index++] = 2 * i + 2;
             quads[index++] = 2 * i + 3;
             quads[index++] = 2 * i + 1;
@@ -49,7 +49,6 @@ public class MeshGeneratorQuad : MonoBehaviour
         return mesh;
     }
 
-    // Create a grid mesh XY with nSegmentsX and nSegementsZ and quads
     Mesh CreateGridXZ(int nSegmentsX, int nSegmentsZ, Vector3 halfSize)
     {
         Mesh mesh = new Mesh();
@@ -59,31 +58,31 @@ public class MeshGeneratorQuad : MonoBehaviour
         int[] quads = new int[nSegmentsX * nSegmentsZ * 4];
 
         int index = 0;
-        for (int z = 0; z <= nSegmentsZ; z++)
+        for (int i = 0; i < nSegmentsX + 1; i++)
         {
-            for (int x = 0; x <= nSegmentsX; x++)
+            for (int j = 0; j < nSegmentsZ + 1; j++)
             {
-                float kx = (float)x / nSegmentsX; // coefficient d'avancement sur la boucle, entre 0 et 100%
-                float kz = (float)z / nSegmentsZ; // coefficient d'avancement sur la boucle, entre 0 et 100%
-                Vector3 tmpPos = new Vector3(-halfSize.x + 2 * halfSize.x * kx, 0, halfSize.z - 2 * halfSize.z * kz);
+                float k = (float) i / nSegmentsX;  // coefficient d'avancement sur la boucle, entre 0 et 100%
+                float l = (float) j / nSegmentsZ;  // coefficient d'avancement sur la boucle, entre 0 et 100%
+                Vector3 tmpPos = new Vector3(-halfSize.x + 2 * halfSize.x * k, 0, -halfSize.z + 2 * halfSize.z * l);
                 vertices[index++] = tmpPos;
             }
         }
 
         index = 0;
-        for (int z = 0; z < nSegmentsZ; z++)
+        for (int i = 0; i < nSegmentsX; i++)
         {
-            for (int x = 0; x < nSegmentsX; x++)
+            for (int j = 0; j < nSegmentsZ; j++)
             {
-                quads[index++] = x + z * (nSegmentsX + 1); // Vertices créés : |/|/|/|/
-                quads[index++] = x + (z + 1) * (nSegmentsX + 1);
-                quads[index++] = x + 1 + (z + 1) * (nSegmentsX + 1);
-                quads[index++] = x + 1 + z * (nSegmentsX + 1);
+                quads[index++] = i + j * (nSegmentsX + 1); // Vertices créés : |/|/|/|/
+                quads[index++] = i + (j + 1) * (nSegmentsX + 1);
+                quads[index++] = i + 1 + (j + 1) * (nSegmentsX + 1);
+                quads[index++] = i + 1 + j * (nSegmentsX + 1);
             }
         }
 
         mesh.vertices = vertices;
-        mesh.SetIndices(quads, MeshTopology.Quads, 0);
+        mesh.SetIndices(quads, MeshTopology.Quads, 0);;
 
         return mesh;
     }
@@ -97,7 +96,7 @@ public class MeshGeneratorQuad : MonoBehaviour
         Vector3[] vertices = mesh.vertices;
         int[] quads = mesh.GetIndices(0);
 
-        
+
         GUIStyle style = new GUIStyle();
         style.fontSize = 20;
         style.normal.textColor = Color.red;
@@ -105,7 +104,7 @@ public class MeshGeneratorQuad : MonoBehaviour
         for (int i = 0; i < vertices.Length; i++)
         {
             Vector3 worldPos = transform.TransformPoint(vertices[i]);
-            Handles.Label(worldPos, i.ToString(), style) ;
+            Handles.Label(worldPos, i.ToString(), style);
         }
 
         Gizmos.color = Color.black;
@@ -114,7 +113,7 @@ public class MeshGeneratorQuad : MonoBehaviour
 
         for (int i = 0; i < quads.Length / 4; i++)
         {
-            int index1 = quads[ 4 * i];
+            int index1 = quads[4 * i];
             int index2 = quads[4 * i + 1];
             int index3 = quads[4 * i + 2];
             int index4 = quads[4 * i + 3];
