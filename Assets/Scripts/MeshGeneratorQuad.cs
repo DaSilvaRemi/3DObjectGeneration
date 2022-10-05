@@ -11,7 +11,8 @@ public class MeshGeneratorQuad : MonoBehaviour
     void Start()
     {
         m_Mf = GetComponent<MeshFilter>();
-        m_Mf.mesh = CreateStrip(7, new Vector3(4, 1, 3));
+        //m_Mf.mesh = CreateStrip(7, new Vector3(4, 1, 3));
+        m_Mf.mesh = this.CreateGridXZ(16, 16, new Vector3(8, 0, 8));
     }
 
     Mesh CreateStrip(int nSegments, Vector3 halfSize)
@@ -36,10 +37,49 @@ public class MeshGeneratorQuad : MonoBehaviour
         index = 0;
         for (int i = 0; i < nSegments; i++)
         {
-            quads[index++] = 2 * i; // Vertices créés : |/|/|/|/
+            quads[index++] = 2 * i; // Vertices crï¿½ï¿½s : |/|/|/|/
             quads[index++] = 2 * i + 2;
             quads[index++] = 2 * i + 3;
             quads[index++] = 2 * i + 1;
+        }
+
+        mesh.vertices = vertices;
+        mesh.SetIndices(quads, MeshTopology.Quads, 0);
+
+        return mesh;
+    }
+
+    // Create a grid mesh XY with nSegmentsX and nSegementsZ and quads
+    Mesh CreateGridXZ(int nSegmentsX, int nSegmentsZ, Vector3 halfSize)
+    {
+        Mesh mesh = new Mesh();
+        mesh.name = "grid";
+
+        Vector3[] vertices = new Vector3[(nSegmentsX + 1) * (nSegmentsZ + 1)];
+        int[] quads = new int[nSegmentsX * nSegmentsZ * 4];
+
+        int index = 0;
+        for (int z = 0; z <= nSegmentsZ; z++)
+        {
+            for (int x = 0; x <= nSegmentsX; x++)
+            {
+                float kx = (float)x / nSegmentsX; // coefficient d'avancement sur la boucle, entre 0 et 100%
+                float kz = (float)z / nSegmentsZ; // coefficient d'avancement sur la boucle, entre 0 et 100%
+                Vector3 tmpPos = new Vector3(-halfSize.x + 2 * halfSize.x * kx, 0, halfSize.z - 2 * halfSize.z * kz);
+                vertices[index++] = tmpPos;
+            }
+        }
+
+        index = 0;
+        for (int z = 0; z < nSegmentsZ; z++)
+        {
+            for (int x = 0; x < nSegmentsX; x++)
+            {
+                quads[index++] = x + z * (nSegmentsX + 1); // Vertices crÃ©Ã©s : |/|/|/|/
+                quads[index++] = x + (z + 1) * (nSegmentsX + 1);
+                quads[index++] = x + 1 + (z + 1) * (nSegmentsX + 1);
+                quads[index++] = x + 1 + z * (nSegmentsX + 1);
+            }
         }
 
         mesh.vertices = vertices;
