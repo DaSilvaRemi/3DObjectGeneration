@@ -14,7 +14,7 @@ public class MeshGeneratorTriangles : MonoBehaviour
         //m_Mf.mesh = this.CreateTriangle();
         //m_Mf.mesh = this.CreateQuad(new Vector3(1, 0, 2));
         //m_Mf.mesh = this.CreateStrip(16, new Vector3(1, 0, 8));
-        //m_Mf.mesh = this.CreateGridXZ(16, 16, new Vector3(8, 0, 8));
+        m_Mf.mesh = this.CreateGridXZ(16, 16, new Vector3(8, 0, 8));
     }
 
     Mesh CreateTriangle()

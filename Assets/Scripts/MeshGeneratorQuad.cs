@@ -75,9 +75,10 @@ public class MeshGeneratorQuad : MonoBehaviour
             for (int j = 0; j < nSegmentsZ; j++)
             {
                 quads[index++] = i + j * (nSegmentsX + 1); // Vertices créés : |/|/|/|/
-                quads[index++] = i + (j + 1) * (nSegmentsX + 1);
-                quads[index++] = i + 1 + (j + 1) * (nSegmentsX + 1);
                 quads[index++] = i + 1 + j * (nSegmentsX + 1);
+                quads[index++] = i + 1 + (j + 1) * (nSegmentsX + 1);
+                quads[index++] = i + (j + 1) * (nSegmentsX + 1);
+                
             }
         }
 
