@@ -35,7 +35,8 @@ public class MeshGeneratorQuad : MonoBehaviour
         });*/
         //m_Mf.mesh = CreateBox(new Vector3(5, 5, 5));
         //m_Mf.mesh = CreateChips(new Vector3(5, 5, 5));
-        m_Mf.mesh = this.CreateRegularPolygon(new Vector3(8, 0, 8), 20);
+        //m_Mf.mesh = this.CreateRegularPolygon(new Vector3(8, 0, 8), 20);
+        m_Mf.mesh = this.CreatePacman(new Vector3(8, 0, 8), 20);
         GUIUtility.systemCopyBuffer = ConvertToCSV("\t");
         Debug.Log(ConvertToCSV("\t"));
     }
@@ -328,6 +329,56 @@ public class MeshGeneratorQuad : MonoBehaviour
             quads[index++] = i;
             quads[index++] = beforeLastVertice;
             
+        }
+
+        mesh.vertices = vertices;
+        mesh.SetIndices(quads, MeshTopology.Quads, 0);
+
+        return mesh;
+    }
+
+    Mesh CreatePacman(Vector3 halfSize, int nSectors, float startAngle = Mathf.PI / 3, float endAngle = 5 * Mathf.PI / 3)
+    {
+        Mesh mesh = new Mesh();
+        mesh.name = "Polygon";
+
+        Vector3[] vertices = new Vector3[(nSectors * 2) + 1];
+        int[] quads = new int[(4 * nSectors)];
+
+
+        float initialAngle = ( (endAngle - startAngle) / nSectors); // en radian
+        float currentAngle = initialAngle;
+
+        for (int i = 0; i < (nSectors * 2) + 1; i += 2)
+        {
+            vertices[i] = new Vector3(
+                Mathf.Cos(currentAngle) * halfSize.x,
+                0,
+                Mathf.Sin(currentAngle) * halfSize.x);
+
+            currentAngle += initialAngle;
+        }
+
+        for (int i = 1; i < (nSectors * 2); i += 2)
+        {
+            float milieu_x = (vertices[i - 1].x + vertices[i + 1].x) / 2;
+            float milieu_z = (vertices[i - 1].z + vertices[i + 1].z) / 2;
+            vertices[i] = new Vector3(milieu_x, 0, milieu_z);
+        }
+
+        vertices[nSectors * 2] = Vector3.zero;
+
+        int index = 0;
+        int lastVertice = vertices.Length - 1;
+        int beforeLastVertice = lastVertice - 1;
+        for (int i = 0; i < quads.Length / 2; i += 2)
+        {
+            beforeLastVertice = i == 0 ? lastVertice : i - 1;
+            quads[index++] = lastVertice;
+            quads[index++] = i + 1;
+            quads[index++] = i;
+            quads[index++] = beforeLastVertice;
+
         }
 
         mesh.vertices = vertices;
