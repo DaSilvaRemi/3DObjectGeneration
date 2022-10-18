@@ -36,7 +36,7 @@ public class MeshGeneratorQuad : MonoBehaviour
         //m_Mf.mesh = CreateBox(new Vector3(5, 5, 5));
         //m_Mf.mesh = CreateChips(new Vector3(5, 5, 5));
         //m_Mf.mesh = this.CreateRegularPolygon(new Vector3(8, 0, 8), 20);
-        m_Mf.mesh = this.CreatePacman(new Vector3(8, 0, 8), 20);
+        m_Mf.mesh = this.CreatePacman(new Vector3(16, 0, 16), 20);
         GUIUtility.systemCopyBuffer = ConvertToCSV("\t");
         Debug.Log(ConvertToCSV("\t"));
     }
