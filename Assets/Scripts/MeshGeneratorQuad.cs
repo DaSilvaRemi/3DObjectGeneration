@@ -38,7 +38,7 @@ public class MeshGeneratorQuad : MonoBehaviour
         });*/
 
         //Create a donut mesh with a hole in the middle and using CreateNormalizedGridXZ
-        m_Mf.mesh = this.CreateNormalizedGridXZ(6 * 100, 50, (kX, kZ) =>
+        /*m_Mf.mesh = this.CreateNormalizedGridXZ(6 * 100, 50, (kX, kZ) =>
         {
             float R = 3;
             float r = 1;
@@ -48,12 +48,12 @@ public class MeshGeneratorQuad : MonoBehaviour
             Vector3 OOmegaP = r * Mathf.Cos(alpha) * OOmega.normalized + r * Mathf.Sin(alpha) * Vector3.up
             + Vector3.up * kX * 2 * r * 6;
             return OOmega + OOmegaP;
-        });
+        });*/
 
         //m_Mf.mesh = CreateBox(new Vector3(5, 5, 5));
         //m_Mf.mesh = CreateChips(new Vector3(5, 5, 5));
         //m_Mf.mesh = this.CreateRegularPolygon(new Vector3(8, 0, 8), 20);
-        //m_Mf.mesh = this.CreatePacman(new Vector3(8, 0, 8), 20);
+        m_Mf.mesh = this.CreatePacman(new Vector3(8, 0, 8), 20);
         GUIUtility.systemCopyBuffer = ConvertToCSV("\t");
         Debug.Log(ConvertToCSV("\t"));
     }

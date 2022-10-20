@@ -37,32 +37,31 @@ public Mesh ConvertToFaceVertexMesh()
 {
     Mesh newMesh = new Mesh();
 
-    /*Vector3[] vertices = new Vector3[vertices.Count];
+    Vector3[] vertices = new Vector3[this.vertices.Count];
     int[] quads = new int[faces.Count * 4];
 
-    foreach (Vertex v in vertices)
+    foreach (Vertex v in this.vertices)
     {
-        vertices[v.index] = v.m_position;
+        vertices[v.index] = v.position;
     }
 
-    int idQuad = 0;
-    foreach (Face f in m_Faces)
+    for (int i = 0; i < faces.Count; i++)
     {
+        Face f = faces[i];
         int offset = 0;
-        HalfEdge he = f.m_side.m_prevEdge;
+        HalfEdge he = f.edge.prevEdge;
         do
         {
-            quads[idQuad * 4 + offset] = he.m_sourceVertex.m_index;
+            quads[i * 4 + offset] = he.sourceVertex.index;
             offset++;
-            he = he.m_nextEdge;
+            he = he.nextEdge;
         }
-        while (f.m_side.m_prevEdge != he);
-        idQuad++;
+        while (f.edge.prevEdge != he);
     }		
     newMesh.vertices = vertices;
     newMesh.SetIndices(quads, MeshTopology.Quads, 0);
     newMesh.RecalculateBounds();
-    newMesh.RecalculateNormals();*/
+    newMesh.RecalculateNormals();
     return newMesh;
 }
 public string ConvertToCSVFormat(string separator = "\t")
