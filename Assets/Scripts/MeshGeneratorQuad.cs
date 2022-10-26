@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using WingedEdge;
 
 [RequireComponent(typeof(MeshFilter))]
 public class MeshGeneratorQuad : MonoBehaviour
@@ -17,7 +18,7 @@ public class MeshGeneratorQuad : MonoBehaviour
     void Start()
     {
         m_Mf = GetComponent<MeshFilter>();
-        //m_Mf.mesh = CreateStrip(7, new Vector3(4, 1, 3));
+        m_Mf.mesh = CreateStrip(3, new Vector3(.5f, .5f, .5f));
         //m_Mf.mesh = this.CreateGridXZ(6, 6, new Vector3(8, 0, 8));
         //m_Mf.mesh = this.CreateNormalizedG (ridXZ(6, 6); -
         /*m_Mf.mesh = this.CreateNormalizedGridXZ(30, 5, (kX, kZ) =>
@@ -53,9 +54,11 @@ public class MeshGeneratorQuad : MonoBehaviour
         //m_Mf.mesh = CreateBox(new Vector3(5, 5, 5));
         //m_Mf.mesh = CreateChips(new Vector3(5, 5, 5));
         //m_Mf.mesh = this.CreateRegularPolygon(new Vector3(8, 0, 8), 20);
-        m_Mf.mesh = this.CreatePacman(new Vector3(8, 0, 8), 20);
-        GUIUtility.systemCopyBuffer = ConvertToCSV("\t");
-        Debug.Log(ConvertToCSV("\t"));
+        //m_Mf.mesh = this.CreatePacman(new Vector3(8, 0, 8), 20);
+        WingedEdgeMesh wingedEdge = new WingedEdgeMesh(m_Mf.mesh);
+        GUIUtility.systemCopyBuffer = wingedEdge.ConvertToCSVFormat("\t");
+        //GUIUtility.systemCopyBuffer = ConvertToCSV("\t");
+        //Debug.Log(ConvertToCSV("\t"));
     }
 
     string ConvertToCSV(string separator)
@@ -419,11 +422,10 @@ public class MeshGeneratorQuad : MonoBehaviour
         {
             style.fontSize = 20;
             style.normal.textColor = Color.red;
-
             for (int i = 0; i < vertices.Length; i++)
             {
                 Vector3 worldPos = transform.TransformPoint(vertices[i]);
-                Handles.Label(worldPos, i.ToString(), style);
+                Handles.Label(worldPos, i.ToString() + " " + worldPos.ToString(), style);
             }
         }
 

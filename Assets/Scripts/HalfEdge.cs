@@ -102,6 +102,17 @@ namespace HalfEdge
                 Face f = new Face(i);
                 List<HalfEdge> tempHalfEdges = new List<HalfEdge>();
 
+                /*
+                //
+                //
+                //
+                //
+                // A corriger problème sur l'index de shapes
+                //
+                //
+                //
+                //
+                */
                 for (int j = 0; j < nVerticesForTopology; j++)
                 {
                     Vertex v = this.vertices[shapes[j]];
