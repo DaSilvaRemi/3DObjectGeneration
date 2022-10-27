@@ -70,6 +70,8 @@ namespace WingedEdge
         public List<WingedEdge> edges;
         public List<Face> faces;
 
+        public int nVerticesForTopology;
+
         public WingedEdgeMesh(Mesh mesh)
         {
             // constructeur prenant un mesh Vertex-Face en parametre
@@ -88,7 +90,7 @@ namespace WingedEdge
 
             MeshTopology meshTopology = mesh.GetTopology(0);
 
-            int nVerticesForTopology = meshTopology.Equals(MeshTopology.Triangles) ? 3 : 4;
+            this.nVerticesForTopology = meshTopology.Equals(MeshTopology.Triangles) ? 3 : 4;
 
             Dictionary<long, WingedEdge> mapWingedEdges = new Dictionary<long, WingedEdge>();
 
@@ -167,7 +169,7 @@ namespace WingedEdge
                         // Edges adjacentes "simples"
                         currentWingedEdge.startCWEdge = (j == 0) ? wingedEdges[nVerticesForTopology - 1] : wingedEdges[j - 1];
                         currentWingedEdge.endCCWEdge = (j < nVerticesForTopology - 1) ? wingedEdges[j + 1] : wingedEdges[0];
-                         currentWingedEdge.endVertex.edge = (j < nVerticesForTopology - 1) ? wingedEdges[j + 1] : wingedEdges[0];
+                        currentWingedEdge.endVertex.edge = (j < nVerticesForTopology - 1) ? wingedEdges[j + 1] : wingedEdges[0];
                     }
                 }
             }
@@ -175,25 +177,35 @@ namespace WingedEdge
 
         public Mesh ConvertToFaceVertexMesh()
         {
-            Mesh faceVertexMesh = new Mesh();
-            Vector3[] vertices = new Vector3[this.edges.Count * 2];
-            int[] quads = new int[this.faces.Count * 4];
+            Mesh newMesh = new Mesh();
+            Vector3[] vertices = new Vector3[this.vertices.Count];
+            int[] quads = new int[this.faces.Count * this.nVerticesForTopology];
 
-            foreach (Face face in this.faces)
+            // Parcourir le tableau des Vertex et les mettres dans le tableau des vertices du Mesh
+            for (int i = 0; i < this.vertices.Count; i++)
             {
-                WingedEdge edge = face.edge;
-                WingedEdge startEdge = edge;
+                vertices[i] = this.vertices[i].position;
+            }
+
+            // Parcourir le tableau de faces récuppérent son edge puis créer les Quads
+            for (int i = 0; i < this.faces.Count; i++)
+            {
+                Face face = this.faces[i];
+                WingedEdge current_edge = face.edge;
+                WingedEdge firstEdge = current_edge;
+                int offset = 0;
+                int index = i * this.nVerticesForTopology;
                 do
                 {
-                    vertices[edge.index * 2] = edge.startVertex.position;
-                    vertices[edge.index * 2 + 1] = edge.endVertex.position;
-                    quads[edge.index * 4] = edge.index * 2;
-                    quads[edge.index * 4 + 1] = edge.index * 2 + 1;
-
-                    edge = edge.startCWEdge;
-                } while (edge != startEdge);
+                    quads[index + offset++] = current_edge.startVertex.index;
+                    quads[index + offset++] = current_edge.endVertex.index;
+                    //quads[index++] = edge.startVertex.index;
+                    //quads[index++] = edge.endVertex.index;
+                    current_edge = current_edge.endCCWEdge;
+                } while (current_edge != firstEdge);
             }
-            return faceVertexMesh;
+
+            return newMesh;
         }
         
         public string ConvertToCSVFormat(string separator = "\t")
@@ -270,10 +282,6 @@ namespace WingedEdge
                 strings[i] += v.position.y.ToString("N03") + " ";
                 strings[i] += v.position.z.ToString("N03") + " " + separator;
                 strings[i] += v.edge.index;
-            }
-            for(int i = vertices.Count ; i < tabSize ; i++){
-                // Compléter les colonnes restantes par des separator (histoire de dire)
-                strings[i] += separator + separator + separator + separator;
             }
 
             string header = "WingedEdges" + separator + separator + separator + separator + separator + "Faces" + separator + separator + separator + "Vertices" + "\n"

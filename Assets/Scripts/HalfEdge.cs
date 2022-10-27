@@ -77,14 +77,18 @@ namespace HalfEdge
         public List<Vertex> vertices;
         public List<HalfEdge> edges;
         public List<Face> faces;
+
+        public int nVerticesForTopology;
+
         public HalfEdgeMesh(Mesh mesh)
         {
             // constructeur prenant un mesh Vertex-Face en paramètre
-            //magic happens
             this.vertices = new List<Vertex>();
             this.edges = new List<HalfEdge>();
             this.faces = new List<Face>();
             Vector3[] meshVertices = mesh.vertices;
+
+            List<string> listOfIndex = new List<string>();
 
             for (int i = 0; i < mesh.vertexCount; i++)
             {
@@ -94,94 +98,112 @@ namespace HalfEdge
             int[] shapes = mesh.GetIndices(0);
 
             MeshTopology meshTopology = mesh.GetTopology(0);
+            this.nVerticesForTopology = meshTopology.Equals(MeshTopology.Triangles) ? 3 : 4;
 
-            int nVerticesForTopology = meshTopology.Equals(MeshTopology.Triangles) ? 3 : 4;
+            int indexVertex = 0;
+            int indexHalfEdge = 0;
+            int nbFaces = shapes.Length / nVerticesForTopology;
 
-            for (int i = 0; i < shapes.Length / nVerticesForTopology; i++)
+            int cmp = 0;
+
+            for (int i = 0; i < nbFaces; i++)
             {
                 Face f = new Face(i);
                 List<HalfEdge> tempHalfEdges = new List<HalfEdge>();
 
-                /*
-                //
-                //
-                //
-                //
-                // A corriger problème sur l'index de shapes
-                //
-                //
-                //
-                //
-                */
                 for (int j = 0; j < nVerticesForTopology; j++)
                 {
-                    Vertex v = this.vertices[shapes[j]];
-                    HalfEdge hf = new HalfEdge(j, v, f);
-                    tempHalfEdges.Add(hf);
+                    Vertex v = this.vertices[shapes[indexVertex++]];
+                    HalfEdge he = new HalfEdge(indexHalfEdge++, v, f);
+                    tempHalfEdges.Add(he);
+
+
+                    //long startIndex = indexVertex;
+                    //long endIndex = (indexVertex < nVerticesForTopology - 1) ? indexVertex : 0;
+                    //long key = startIndex + (endIndex << 32);
+                    //mapHalfEdges.Add(key, he);
                 }
 
-                for (int j = 0; j < tempHalfEdges.Count; j++)
-                {
-                    HalfEdge currentHF = tempHalfEdges[j];
-                    int nextEdgeIndice = j == tempHalfEdges.Count - 1 ? 0 : j + 1;
-                    int previousEdgeIndice = j == 0 ? tempHalfEdges.Count - 1 : j - 1;
+                int nbTempHalfEdge = tempHalfEdges.Count;
 
-                    currentHF.prevEdge = tempHalfEdges[previousEdgeIndice];
-                    currentHF.nextEdge = tempHalfEdges[nextEdgeIndice];
-                    currentHF.sourceVertex.outgoingEdge = currentHF;
-                    this.edges.Add(currentHF);
+                for (int j = 0; j < nbTempHalfEdge; j++)
+                {
+                    HalfEdge currentHE = tempHalfEdges[j];
+                    int nextEdgeIndice = (j == nbTempHalfEdge - 1) ? 0 : j + 1;
+                    int previousEdgeIndice = (j == 0) ? nbTempHalfEdge - 1 : j - 1;
+
+                    currentHE.prevEdge = tempHalfEdges[previousEdgeIndice];
+                    currentHE.nextEdge = tempHalfEdges[nextEdgeIndice];
+
+
+                    // // Modification de la twin edge si elle existe
+                    // HalfEdge he1;
+                    // int startIndex = currentHE.sourceVertex.index;
+                    // long endIndex = currentHE.nextEdge.sourceVertex.index;
+                    // // long keyReversed = endIndex + (startIndex << 32);
+                    // if (mapHalfEdges.TryGetValue(keyReversed, out he))
+                    // {
+                    //     // Imaginons 0->1 et sa twin 1->0
+                    //     // La keyReversed de currentHE sera donc 1 + 0<<32 (pseudo-code)
+                    //     // Si cette HalfEdge existe, ça veut dire qu'on a trouvé la twin de notre currentHE
+                    //     // On lui applique donc sa twin.
+                    //     // Pour ce qui est de la twin de la twin, elle sera appliquée dans une autre itération de la boucle for
+                    //     currentHE.twinEdge = he;
+                    // }
+
+                    currentHE.sourceVertex.outgoingEdge = currentHE;
+                    this.edges.Add(currentHE);
+                }
+
+                for (int j = 0; j < nVerticesForTopology; j++)
+                {
+                    int startIndex = this.edges[cmp].sourceVertex.index;
+                    int endIndex = this.edges[cmp].nextEdge.sourceVertex.index;//(((compteur + 1) % nVerticesForTopology) != 0) ? compteur + 1 : (compteur - nVerticesForTopology + 1);
+                    // Debug.Log("Test: " + startIndex + " : " + endIndex);
+                    string newKey = startIndex + "|" + endIndex;
+                    listOfIndex.Add(newKey);
+
+                    cmp++;
                 }
 
                 f.edge = tempHalfEdges[0];
                 this.faces.Add(f);
-
-                /*Vertex v0 = this.vertices[shapes[indexVertex]];
-                HalfEdge hf_0 = new HalfEdge(indexHalfEdge++, v0, f);
-                indexVertex++;
-
-                Vertex v1 = this.vertices[shapes[indexVertex]];
-                HalfEdge hf_1 = new HalfEdge(indexHalfEdge++, v1, f);
-                indexVertex++;
-
-                Vertex v2 = this.vertices[shapes[indexVertex]];
-                HalfEdge hf_2 = new HalfEdge(indexHalfEdge++, v2, f);
-                indexVertex++;
-
-                Vertex v3 = this.vertices[shapes[indexVertex]];
-                HalfEdge hf_3 = new HalfEdge(indexHalfEdge++, v3, f);
-                indexVertex++;*/
-
-                /*v0.outgoingEdge = hf_0;
-                v1.outgoingEdge = hf_1;
-                v2.outgoingEdge = hf_2;
-                v3.outgoingEdge = hf_3;*/
-
-
-
-                /*hf_0.prevEdge = hf_3;
-                hf_0.nextEdge = hf_1;
-
-                hf_1.prevEdge = hf_0;
-                hf_1.nextEdge = hf_2;
-
-                hf_2.prevEdge = hf_1;
-                hf_2.nextEdge = hf_3;
-
-                hf_3.prevEdge = hf_2;
-                hf_3.nextEdge = hf_0;*/
-
-                /*this.edges.Add(hf_0);
-                this.edges.Add(hf_1);
-                this.edges.Add(hf_2);
-                this.edges.Add(hf_3);*/
             }
+
+            string myDebug = "";
+            foreach(string key in listOfIndex){
+                int startIndex = int.Parse(key.Split("|")[0]);
+                int endIndex = int.Parse(key.Split("|")[1]);
+                // Debug.Log("" + startIndex + " : " + endIndex);
+                string reversedKey = "" + endIndex + "|" + startIndex;
+
+                myDebug += key + "\n";
+
+                if(listOfIndex.Contains(reversedKey)){
+                    this.edges[endIndex].twinEdge = this.edges[startIndex];
+                    this.edges[startIndex].twinEdge = this.edges[endIndex];
+                }
+
+                // int out_start;
+                // // int out_end;
+                // if(listOfIndex.TryGetValue(endIndex, out out_start)){
+                //     if(out_start != startIndex)
+                //         continue;
+
+                //     // écrire ici
+                //     this.edges[endIndex].twinEdge = this.edges[out_start];
+                //     this.edges[out_start].twinEdge = this.edges[endIndex];
+                // }
+            }
+
+            Debug.Log(myDebug);
         }
         public Mesh ConvertToFaceVertexMesh()
         {
             Mesh newMesh = new Mesh();
 
             Vector3[] vertices = new Vector3[this.vertices.Count];
-            int[] quads = new int[faces.Count * 4];
+            int[] quads = new int[faces.Count * this.nVerticesForTopology];
 
             foreach (Vertex v in this.vertices)
             {
@@ -191,11 +213,12 @@ namespace HalfEdge
             for (int i = 0; i < faces.Count; i++)
             {
                 Face f = faces[i];
-                int offset = 0;
                 HalfEdge he = f.edge.prevEdge;
+                int offset = 0;
+                int j = i * this.nVerticesForTopology;
                 do
                 {
-                    quads[i * 4 + offset] = he.sourceVertex.index;
+                    quads[j + offset] = he.sourceVertex.index;
                     offset++;
                     he = he.nextEdge;
                 }
@@ -209,17 +232,27 @@ namespace HalfEdge
         }
         public string ConvertToCSVFormat(string separator = "\t")
         {
-            // string str = "";
-            List<string> strings = new List<string>();
+            int tabSize = Mathf.Max(edges.Count, faces.Count, vertices.Count);
+            List<string> strings = new List<string>(new string[tabSize]);
+            Debug.Log("edges.Count = " + edges.Count);
+            Debug.Log("faces.Count = " + faces.Count);
+            Debug.Log("vertices.Count = " + vertices.Count);
+            Debug.Log("tabSize = " + tabSize);
+            Debug.Log("strings size = " + strings.Count);
 
-            foreach (Vertex vertex in this.vertices)
+            for (int i = 0; i < this.edges.Count; i++)
             {
-                Vector3 pos = vertex.position;
-                strings.Add(vertex.index + separator +
-                    pos.x.ToString("N02") + " " +
-                    pos.y.ToString("N02") + " " +
-                    pos.z.ToString("N02") + separator +
-                    vertex.outgoingEdge.index + separator + separator);
+                HalfEdge he = this.edges[i];
+                strings[i] += he.index + separator;
+                strings[i] += he.sourceVertex.index + "; " + he.nextEdge.sourceVertex.index + separator;
+                strings[i] += he.prevEdge.index + "; " + he.nextEdge.index + "; ";
+                strings[i] += he.twinEdge != null ? he.twinEdge.index : "null";
+                strings[i] += separator + separator;
+            }
+            for (int i = edges.Count; i < tabSize; i++)
+            {
+                // Compléter les colonnes restantes par des separator
+                strings[i] += separator + separator + separator + separator;
             }
 
             for (int i = 0; i < faces.Count; i++)
@@ -228,18 +261,27 @@ namespace HalfEdge
                 strings[i] += f.index + separator + f.edge.index + separator + separator;
             }
 
-            for (int i = 0; i < this.edges.Count; i++)
+            for (int i = faces.Count; i < tabSize; i++)
             {
-                HalfEdge he = this.edges[i];
-                strings[i] += he.index + separator + he.sourceVertex.index + separator +
-                he.prevEdge.index + "," + he.nextEdge.index + "," + he.twinEdge + "," +
-                separator + separator;
+                // Compléter les colonnes restantes par des separator
+                strings[i] += separator + separator + separator;
             }
 
-            string header = "HalfEdges" + separator + separator + separator + separator + "Faces" +
-                separator + separator + separator + "Vertices\n" +
-                "index" + separator + "sourceVertexIndex" + separator + "edgesIndex" + separator + separator + "index" +
-                separator + "position" + separator + "outgoingEdgeIndex" + "\n";
+            for (int i = 0; i < this.vertices.Count; i++)
+            {
+                Vertex vertex = this.vertices[i];
+                Vector3 pos = vertex.position;
+                strings[i] += vertex.index + separator;
+                strings[i] += pos.x.ToString("N02") + " ";
+                strings[i] += pos.y.ToString("N02") + " ";
+                strings[i] += pos.z.ToString("N02") + separator;
+                strings[i] += vertex.outgoingEdge.index + separator + separator;
+            }
+
+            string header = "HalfEdges" + separator + separator + separator + separator + "Faces" + separator + separator + separator + "Vertices\n" +
+                "Index" + separator + "Src Vertex Index,end" + separator + "Prev + Next + Twin HalfEdge Index" + separator + separator +
+                "Index" + separator + "HalfEdge Index" + separator + separator +
+                "Index" + separator + "Position" + separator + "OutgoingEdgeIndex" + "\n";
 
             return header + string.Join("\n", strings);
         }

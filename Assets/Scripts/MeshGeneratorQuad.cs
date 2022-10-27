@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using WingedEdge;
+using HalfEdge;
 
 [RequireComponent(typeof(MeshFilter))]
 public class MeshGeneratorQuad : MonoBehaviour
@@ -18,8 +19,8 @@ public class MeshGeneratorQuad : MonoBehaviour
     void Start()
     {
         m_Mf = GetComponent<MeshFilter>();
-        m_Mf.mesh = CreateStrip(3, new Vector3(.5f, .5f, .5f));
-        //m_Mf.mesh = this.CreateGridXZ(6, 6, new Vector3(8, 0, 8));
+        m_Mf.mesh = CreateStrip(2, new Vector3(.5f, .5f, .5f));
+        // m_Mf.mesh = this.CreateGridXZ(3, 3, new Vector3(.5f, .5f, .5f));
         //m_Mf.mesh = this.CreateNormalizedG (ridXZ(6, 6); -
         /*m_Mf.mesh = this.CreateNormalizedGridXZ(30, 5, (kX, kZ) =>
         {
@@ -55,8 +56,13 @@ public class MeshGeneratorQuad : MonoBehaviour
         //m_Mf.mesh = CreateChips(new Vector3(5, 5, 5));
         //m_Mf.mesh = this.CreateRegularPolygon(new Vector3(8, 0, 8), 20);
         //m_Mf.mesh = this.CreatePacman(new Vector3(8, 0, 8), 20);
-        WingedEdgeMesh wingedEdge = new WingedEdgeMesh(m_Mf.mesh);
-        GUIUtility.systemCopyBuffer = wingedEdge.ConvertToCSVFormat("\t");
+        
+        //WingedEdgeMesh wingedEdgeMesh = new WingedEdgeMesh(m_Mf.mesh);
+        //GUIUtility.systemCopyBuffer = wingedEdgeMesh.ConvertToCSVFormat("\t");
+        
+        HalfEdgeMesh halfEdgeMesh = new HalfEdgeMesh(m_Mf.mesh);
+        GUIUtility.systemCopyBuffer = halfEdgeMesh.ConvertToCSVFormat("\t");
+
         //GUIUtility.systemCopyBuffer = ConvertToCSV("\t");
         //Debug.Log(ConvertToCSV("\t"));
     }
@@ -91,9 +97,9 @@ public class MeshGeneratorQuad : MonoBehaviour
         for (int i = 0; i < quads.Length / 4; i++)
         {
             strings[i] += i.ToString() + separator +
-            quads[i * 4 + 0].ToString() + "," +
-            quads[i * 4 + 1].ToString() + "," +
-            quads[i * 4 + 2].ToString() + "," +
+            quads[i * 4 + 0].ToString() + ", " +
+            quads[i * 4 + 1].ToString() + ", " +
+            quads[i * 4 + 2].ToString() + ", " +
             quads[i * 4 + 3].ToString();
         }
 
