@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
@@ -20,18 +21,18 @@ namespace HalfEdge
 
         }
 
-        public HalfEdge(int index, Vertex vertex, Face face)
+        public HalfEdge(int index, Vertex vertex, Face face) : this(index, vertex, face, null, null, null)
+        {
+        }
+
+        public HalfEdge(int index, Vertex vertex, Face face, HalfEdge prevEdge, HalfEdge nextEdge, HalfEdge twinEdge)
         {
             this.index = index;
             this.sourceVertex = vertex;
             this.face = face;
-        }
-
-        public HalfEdge(Vertex vertex, Face face)
-        {
-            //this.index = index;
-            this.sourceVertex = vertex;
-            this.face = face;
+            this.prevEdge = prevEdge;
+            this.nextEdge = nextEdge;
+            this.twinEdge = twinEdge;
         }
     }
     public class Vertex
@@ -45,10 +46,15 @@ namespace HalfEdge
 
         }
 
-        public Vertex(int index, Vector3 pos)
+        public Vertex(int index, Vector3 pos) : this(index, pos, null)
+        {
+        }
+
+        public Vertex(int index, Vector3 pos, HalfEdge outgoingEdge)
         {
             this.index = index;
             this.position = pos;
+            this.outgoingEdge = outgoingEdge;
         }
     }
     public class Face
@@ -326,188 +332,221 @@ namespace HalfEdge
             }
         }
 
-        /**
-        * Subdivide HalfEdge using Catmull-Clark methods
-        */
-        public void Subdivide()
+        public void SubdivideCatmullClark(int nbSubDiv)
         {
-            //Create new vertices
-            List<Vertex> newVertices = new List<Vertex>();
-            foreach (Vertex v in this.vertices)
+            for (int i = 0; i < nbSubDiv; i++)
             {
-                newVertices.Add(v);
+                this.SubdivideCatmullClark();
             }
-            foreach (Face f in this.faces)
-            {
-                HalfEdge e = f.edge;
-                Vector3 p0 = e.sourceVertex.position;
-                Vector3 p1 = e.nextEdge.sourceVertex.position;
-                Vector3 p2 = e.nextEdge.nextEdge.sourceVertex.position;
-                Vector3 p3 = e.nextEdge.nextEdge.nextEdge.sourceVertex.position;
-                Vector3 newVertexPosition = (p0 + p1 + p2 + p3) / 4;
-                Vertex newVertex = new Vertex(newVertices.Count, newVertexPosition);
-                newVertices.Add(newVertex);
-            }
-            foreach (HalfEdge e in this.edges)
-            {
-                Vector3 p0 = e.sourceVertex.position;
-                Vector3 p1 = e.nextEdge.sourceVertex.position;
-                Vector3 p2 = e.nextEdge.nextEdge.sourceVertex.position;
-                Vector3 p3 = e.nextEdge.nextEdge.nextEdge.sourceVertex.position;
-                Vector3 newVertexPosition = (p0 + p1 + p2 + p3) / 4;
-                Vertex newVertex = new Vertex(newVertices.Count, newVertexPosition);
-                newVertices.Add(newVertex);
-            }
-            this.vertices = newVertices;
-
-            //Create new faces
-            this.splitFaces();
-
-            //Create new edges
-            List<HalfEdge> newEdges = this.splitEdges();
-
-            // Calculate the new position of the edges
-            for (int i = 0; i < newEdges.Count; i++)
-            {
-                HalfEdge e = newEdges[i];
-                Vertex v0 = e.sourceVertex;
-                Vertex v1 = e.nextEdge.sourceVertex;
-                Vertex v2 = e.nextEdge.nextEdge.sourceVertex;
-                Vertex v3 = e.nextEdge.nextEdge.nextEdge.sourceVertex;
-                Vertex v4 = e.nextEdge.nextEdge.nextEdge.nextEdge.sourceVertex;
-                Vertex v5 = e.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge.sourceVertex;
-                Vertex v6 = e.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge.sourceVertex;
-                Vertex v7 = e.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge.sourceVertex;
-
-                e.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge = v0.outgoingEdge;
-                e.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge = v1.outgoingEdge;
-                e.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge = v2.outgoingEdge;
-                e.nextEdge.nextEdge.nextEdge.nextEdge = v3.outgoingEdge;
-                e.nextEdge.nextEdge.nextEdge = v4.outgoingEdge;
-                e.nextEdge.nextEdge = v5.outgoingEdge;
-                e.nextEdge = v6.outgoingEdge;
-                e = v7.outgoingEdge;
-            }
-
-            this.edges = newEdges;
         }
 
-        private List<HalfEdge> splitEdges()
+        public void SubdivideCatmullClark()
         {
-            List<HalfEdge> newEdges = new List<HalfEdge>();
-            foreach (HalfEdge e in this.edges)
+            List<Vector3> facePoints;
+            List<Vector3> edgePoints;
+            List<Vector3> vertexPoints;
+
+            this.CatmullClarkCreateNewPoints(out facePoints, out edgePoints, out vertexPoints);
+
+            // Mise à jour des nouvelles positions
+            for (int j = 0; j < vertexPoints.Count; j++)
             {
-                Vertex v0 = e.sourceVertex;
-                Vertex v1 = e.nextEdge.sourceVertex;
-                Vertex v2 = e.nextEdge.nextEdge.sourceVertex;
-                Vertex v3 = e.nextEdge.nextEdge.nextEdge.sourceVertex;
-                Vertex v4 = e.nextEdge.nextEdge.nextEdge.nextEdge.sourceVertex;
-                Vertex v5 = e.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge.sourceVertex;
-                Vertex v6 = e.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge.sourceVertex;
-                Vertex v7 = e.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge.sourceVertex;
-
-                HalfEdge e0 = new HalfEdge(v0, e.face);
-                HalfEdge e1 = new HalfEdge(v1, e.face);
-                HalfEdge e2 = new HalfEdge(v2, e.face);
-                HalfEdge e3 = new HalfEdge(v3, e.face);
-                HalfEdge e4 = new HalfEdge(v4, e.face);
-                HalfEdge e5 = new HalfEdge(v5, e.face);
-                HalfEdge e6 = new HalfEdge(v6, e.face);
-                HalfEdge e7 = new HalfEdge(v7, e.face);
-
-                e0.nextEdge = e1;
-                e1.nextEdge = e2;
-                e2.nextEdge = e3;
-                e3.nextEdge = e4;
-                e4.nextEdge = e5;
-                e5.nextEdge = e6;
-                e6.nextEdge = e7;
-                e7.nextEdge = e0;
-
-                newEdges.Add(e0);
-                newEdges.Add(e1);
-                newEdges.Add(e2);
-                newEdges.Add(e3);
-                newEdges.Add(e4);
-                newEdges.Add(e5);
-                newEdges.Add(e6);
-                newEdges.Add(e7);
+                this.vertices[j].position = vertexPoints[j];
             }
-            return newEdges;
+
+            // Split des edges
+            foreach (HalfEdge edge in this.edges)
+            {
+                this.SplitEdge(edge, edgePoints[edge.index]);
+            }
+
+            // Split des faces
+            foreach (Face face in this.faces)
+            {
+                this.SplitFace(face, facePoints[face.index]);
+            }   
         }
 
-        private void splitFaces()
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="facePoints"></param>
+        /// <param name="edgePoints"></param>
+        /// <param name="vertexPoints"></param>
+        public void CatmullClarkCreateNewPoints(out List<Vector3> facePoints, out List<Vector3>edgePoints, out List<Vector3> vertexPoints)
         {
-            List<Face> newFaces = new List<Face>();
-            foreach (Face f in this.faces)
+            facePoints = new List<Vector3>();
+            edgePoints = new List<Vector3>();
+            vertexPoints = new List<Vector3>();
+            List<Vector3> midPoints = new List<Vector3>();
+
+            // Pour chaque face on créer son facepoint selon la moyenne de tous ces vertices
+            foreach (Face face in this.faces)
             {
-                HalfEdge e = f.edge;
-                Vertex v0 = e.sourceVertex;
-                Vertex v1 = e.nextEdge.sourceVertex;
-                Vertex v2 = e.nextEdge.nextEdge.sourceVertex;
-                Vertex v3 = e.nextEdge.nextEdge.nextEdge.sourceVertex;
-                Vertex v4 = e.nextEdge.nextEdge.nextEdge.nextEdge.sourceVertex;
-                Vertex v5 = e.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge.sourceVertex;
-                Vertex v6 = e.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge.sourceVertex;
-                Vertex v7 = e.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge.nextEdge.sourceVertex;
+                Vector3 meanPos = Vector3.zero;
 
+                for(int j = face.index; j < face.index + this.nVerticesForTopology; j++)
+                {
+                    meanPos += this.vertices[j].position;
+                }
 
-                Face f0 = new Face(newFaces.Count);
-                Face f1 = new Face(newFaces.Count + 1);
-                Face f2 = new Face(newFaces.Count + 2);
-                Face f3 = new Face(newFaces.Count + 3);
-
-                HalfEdge e0 = new HalfEdge(v0, f0);
-                HalfEdge e1 = new HalfEdge(v1, f0);
-                HalfEdge e2 = new HalfEdge(v4, f0);
-                HalfEdge e3 = new HalfEdge(v7, f0);
-
-                HalfEdge e4 = new HalfEdge(v1, f1);
-                HalfEdge e5 = new HalfEdge(v2, f1);
-                HalfEdge e6 = new HalfEdge(v5, f1);
-                HalfEdge e7 = new HalfEdge(v4, f1);
-
-                HalfEdge e8 = new HalfEdge(v2, f2);
-                HalfEdge e9 = new HalfEdge(v3, f2);
-                HalfEdge e10 = new HalfEdge(v6, f2);
-                HalfEdge e11 = new HalfEdge(v5, f2);
-
-                HalfEdge e12 = new HalfEdge(v3, f3);
-                HalfEdge e13 = new HalfEdge(v0, f3);
-                HalfEdge e14 = new HalfEdge(v7, f3);
-                HalfEdge e15 = new HalfEdge(v6, f3);
-
-                e0.nextEdge = e1;
-                e1.nextEdge = e2;
-                e2.nextEdge = e3;
-                e3.nextEdge = e0;
-
-                e4.nextEdge = e5;
-                e5.nextEdge = e6;
-                e6.nextEdge = e7;
-                e7.nextEdge = e4;
-
-                e8.nextEdge = e9;
-                e9.nextEdge = e10;
-                e10.nextEdge = e11;
-                e11.nextEdge = e8;
-
-                e12.nextEdge = e13;
-                e13.nextEdge = e14;
-                e14.nextEdge = e15;
-                e15.nextEdge = e12;
-
-                f0.edge = e0;
-                f1.edge = e4;
-                f2.edge = e8;
-                f3.edge = e12;
-
-                newFaces.Add(f0);
-                newFaces.Add(f1);
-                newFaces.Add(f2);
-                newFaces.Add(f3);
+                meanPos /= this.nVerticesForTopology;
+                facePoints.Add(meanPos);
             }
-            this.faces = newFaces;
+
+            // Pour chaque edge nous calculons la moyenne de la start vertex, end vertex et des faces points des faces adjacentes
+            foreach (HalfEdge edge in this.edges)
+            {
+                HalfEdge twinEdge = edge.twinEdge;
+
+                Vector3 edgeFacePoint = facePoints[edge.face.index];
+                Vector3 edgeTwinFacePoint = twinEdge != null ? facePoints[twinEdge.face.index] : Vector3.zero;
+                Vector3 srcVertexPos = edge.sourceVertex.position;
+                Vector3 endVertexPos = edge.nextEdge.sourceVertex.position;
+
+                // Calcul de l'edge point et du midPoint. Si l'edge est en bodure l'edge point vaudra midPoint
+                Vector3 midPoint = (srcVertexPos + endVertexPos) / 2;
+                Vector3 edgePoint = twinEdge == null ? midPoint : (edgeFacePoint + edgeTwinFacePoint + srcVertexPos + endVertexPos) / 4;
+                
+                edgePoints.Add(edgePoint);
+                midPoints.Add(midPoint);
+            }
+
+            // On recalcule la position de chaque vertices
+            foreach(Vertex v in this.vertices)
+            {
+                Dictionary<int, HalfEdge> adjacentEdges = new Dictionary<int, HalfEdge>();
+
+                // On trouve tous les edges adjacents à V et on calcule le nombres d'edges incidents.
+                int nbIncidentEdges = 0;
+                foreach (HalfEdge edge in this.edges)
+                {
+                    if (edge.sourceVertex == v)
+                    {
+                        adjacentEdges.Add(edge.index, edge);
+                        nbIncidentEdges++;
+                    }
+                    else if (edge.nextEdge.sourceVertex == v)
+                    {
+                        //adjacentEdges.Add(edge.index, edge.nextEdge);
+                        nbIncidentEdges++;
+                    }
+                }
+
+                // Calcul de la somme du nombre de face et des mids points adjacents à la vertices
+                Vector3 facePointsSum = Vector3.zero;
+                Vector3 midPointsSum = Vector3.zero;
+                int nbFacesPointAdjacent = 0;
+                int nbMidPointAdjacent = 0;
+                foreach (KeyValuePair<int, HalfEdge> kp in adjacentEdges)
+                {
+                    HalfEdge halfEdge = kp.Value;
+                    facePointsSum += facePoints[halfEdge.face.index];
+                    midPointsSum += midPoints[halfEdge.index];
+                    nbFacesPointAdjacent++;
+                    nbMidPointAdjacent++;
+                }
+
+                Vector3 a;
+                Vector3 b = Vector3.zero;
+                Vector3 c = Vector3.zero;
+
+                // Dans le cas où nous somme à l'intérieur on calcule Q et R et ensuite chacun des trois termes de l'équation
+                if (v.outgoingEdge.twinEdge != null)
+                {
+                    Vector3 Q = facePointsSum / nbFacesPointAdjacent;
+                    Vector3 R = midPointsSum / nbMidPointAdjacent;
+                    Vector3 V = v.position;
+
+                    if (nbIncidentEdges == 0)
+                    {
+                        nbIncidentEdges = 1;
+                    }
+
+                    a = (1 / nbIncidentEdges) * Q;
+                    b = (2 / nbIncidentEdges) * R;
+                    c = ((nbIncidentEdges - 3) / nbIncidentEdges) * V;
+                } else
+                {
+                    Vector3 R = midPointsSum + v.position;
+                    a = R / (nbMidPointAdjacent + 1);
+                }
+
+                Vector3 newV = a + b + c;
+                vertexPoints.Add(newV);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="edge"></param>
+        /// <param name="splittingPoint"></param>
+        public void SplitEdge(HalfEdge edge, Vector3 splittingPoint)
+        {
+            // On créer le edge point
+            Vertex edgePointVertex = new Vertex(edge.sourceVertex.index + 1, splittingPoint);
+            HalfEdge edgePoint = new HalfEdge(edge.index + 1, edgePointVertex, edge.face, edge, edge.nextEdge, edge.twinEdge);
+            edgePointVertex.outgoingEdge = edgePoint;
+
+            // On positionne correctement la nouvelle vertices créée
+            this.vertices.Add(null);
+            for (int i = edgePointVertex.index; i < this.vertices.Count - 1; i ++)
+            {
+                this.vertices[i].index = i + 1;
+                this.vertices[i + 1] = this.vertices[i];
+            }
+            this.vertices[edgePointVertex.index] = edgePointVertex;
+
+            // On positionne correctement la nouvelle edge créee
+            this.edges.Add(null);
+            for (int i = edgePoint.index + 1; i < this.edges.Count - 1; i++)
+            {
+                this.edges[i].index = i + 1;
+                this.edges[i + 1] = this.edges[i];
+            }
+            this.edges[edgePoint.index] = edgePoint;
+
+            edge.nextEdge = edgePoint;  
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="face"></param>
+        /// <param name="splittingPoint"></param>
+        public void SplitFace(Face face, Vector3 splittingPoint)
+        {
+            Vertex facePointVertex = new Vertex(this.vertices.Count, splittingPoint);
+
+            HalfEdge firstHalfEdge = face.edge;
+            HalfEdge currentEdge = firstHalfEdge;
+
+            int indexFace = face.index;
+            int indexHalfEdge = this.edges.Count;
+            do
+            {
+                // Récupération des edges points
+                HalfEdge prevEdge = currentEdge.prevEdge;
+                HalfEdge nextEdge = currentEdge.nextEdge;
+
+                // Création des nouvelles faces et des nouveaux edges
+                Face currentFace = indexFace == face.index ? face : new Face(indexFace);
+                HalfEdge prevEdgeToCenter = new HalfEdge(indexHalfEdge++, facePointVertex, currentFace, prevEdge, null, null);
+                HalfEdge nextEdgeToCenter = new HalfEdge(indexHalfEdge++, facePointVertex, currentFace, currentEdge, prevEdgeToCenter, null);
+                
+                prevEdgeToCenter.nextEdge = nextEdgeToCenter;
+                currentFace.edge = prevEdgeToCenter;
+                facePointVertex.outgoingEdge = prevEdgeToCenter;
+
+                // Ajout de la face et des nouvelles edges
+                this.faces.Add(currentFace);
+                this.edges.Add(prevEdgeToCenter);
+                this.edges.Add(nextEdgeToCenter);
+
+                indexFace++;
+                currentEdge = nextEdge;
+            } while (firstHalfEdge != currentEdge);
         }
     }
 }
