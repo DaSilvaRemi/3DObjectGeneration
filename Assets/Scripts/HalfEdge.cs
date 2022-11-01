@@ -88,7 +88,8 @@ namespace HalfEdge
             this.faces = new List<Face>();
             Vector3[] meshVertices = mesh.vertices;
 
-            List<string> listOfIndex = new List<string>();
+            //List<string> listOfIndex = new List<string>();
+            Dictionary<string, int> mapOfIndex = new Dictionary<string, int>();
 
             for (int i = 0; i < mesh.vertexCount; i++)
             {
@@ -161,27 +162,33 @@ namespace HalfEdge
                     int endIndex = this.edges[cmp].nextEdge.sourceVertex.index;//(((compteur + 1) % nVerticesForTopology) != 0) ? compteur + 1 : (compteur - nVerticesForTopology + 1);
                     // Debug.Log("Test: " + startIndex + " : " + endIndex);
                     string newKey = startIndex + "|" + endIndex;
-                    listOfIndex.Add(newKey);
+                    //listOfIndex.Add(newKey);
+                    mapOfIndex.Add(newKey, this.edges[cmp].index);
 
                     cmp++;
                 }
-
                 f.edge = tempHalfEdges[0];
                 this.faces.Add(f);
             }
 
             string myDebug = "";
-            foreach(string key in listOfIndex){
+            foreach(KeyValuePair<string, int> kp in mapOfIndex)
+            {
+                string key = kp.Key;
+                int value = kp.Value;
+                //Debug.Log("List of index : " + listOfIndex.ToString());
                 int startIndex = int.Parse(key.Split("|")[0]);
                 int endIndex = int.Parse(key.Split("|")[1]);
                 // Debug.Log("" + startIndex + " : " + endIndex);
                 string reversedKey = "" + endIndex + "|" + startIndex;
 
-                myDebug += key + "\n";
+                myDebug += key + " => " + value +   "\n";
+                int reversedValue;
+                if(mapOfIndex.TryGetValue(reversedKey, out reversedValue)){
 
-                if(listOfIndex.Contains(reversedKey)){
-                    this.edges[endIndex].twinEdge = this.edges[startIndex];
-                    this.edges[startIndex].twinEdge = this.edges[endIndex];
+
+                    this.edges[reversedValue].twinEdge = this.edges[value];
+                    this.edges[value].twinEdge = this.edges[reversedValue];
                 }
 
                 // int out_start;

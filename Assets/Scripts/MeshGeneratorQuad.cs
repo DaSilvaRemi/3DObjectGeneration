@@ -19,8 +19,8 @@ public class MeshGeneratorQuad : MonoBehaviour
     void Start()
     {
         m_Mf = GetComponent<MeshFilter>();
-        m_Mf.mesh = CreateStrip(2, new Vector3(.5f, .5f, .5f));
-        // m_Mf.mesh = this.CreateGridXZ(3, 3, new Vector3(.5f, .5f, .5f));
+        m_Mf.mesh = CreateStrip(3, new Vector3(.5f, .5f, .5f));
+        //m_Mf.mesh = this.CreateGridXZ(3, 3, new Vector3(.5f, .5f, .5f));
         //m_Mf.mesh = this.CreateNormalizedG (ridXZ(6, 6); -
         /*m_Mf.mesh = this.CreateNormalizedGridXZ(30, 5, (kX, kZ) =>
         {
@@ -56,12 +56,14 @@ public class MeshGeneratorQuad : MonoBehaviour
         //m_Mf.mesh = CreateChips(new Vector3(5, 5, 5));
         //m_Mf.mesh = this.CreateRegularPolygon(new Vector3(8, 0, 8), 20);
         //m_Mf.mesh = this.CreatePacman(new Vector3(8, 0, 8), 20);
-        
-        //WingedEdgeMesh wingedEdgeMesh = new WingedEdgeMesh(m_Mf.mesh);
-        //GUIUtility.systemCopyBuffer = wingedEdgeMesh.ConvertToCSVFormat("\t");
-        
-        HalfEdgeMesh halfEdgeMesh = new HalfEdgeMesh(m_Mf.mesh);
-        GUIUtility.systemCopyBuffer = halfEdgeMesh.ConvertToCSVFormat("\t");
+
+        WingedEdgeMesh wingedEdgeMesh = new WingedEdgeMesh(m_Mf.mesh);
+        GUIUtility.systemCopyBuffer = wingedEdgeMesh.ConvertToCSVFormat("\t");
+        m_Mf.mesh = wingedEdgeMesh.ConvertToFaceVertexMesh();
+
+        //HalfEdgeMesh halfEdgeMesh = new HalfEdgeMesh(m_Mf.mesh);
+        //GUIUtility.systemCopyBuffer = halfEdgeMesh.ConvertToCSVFormat("\t");
+        //m_Mf.mesh =  halfEdgeMesh.ConvertToFaceVertexMesh();
 
         //GUIUtility.systemCopyBuffer = ConvertToCSV("\t");
         //Debug.Log(ConvertToCSV("\t"));

@@ -180,6 +180,7 @@ namespace WingedEdge
             Mesh newMesh = new Mesh();
             Vector3[] vertices = new Vector3[this.vertices.Count];
             int[] quads = new int[this.faces.Count * this.nVerticesForTopology];
+            Debug.Log("Quad size : " + this.faces.Count * this.nVerticesForTopology);
 
             // Parcourir le tableau des Vertex et les mettres dans le tableau des vertices du Mesh
             for (int i = 0; i < this.vertices.Count; i++)
@@ -193,18 +194,35 @@ namespace WingedEdge
                 Face face = this.faces[i];
                 WingedEdge current_edge = face.edge;
                 WingedEdge firstEdge = current_edge;
+                WingedEdge previousEdge = firstEdge;
                 int offset = 0;
                 int index = i * this.nVerticesForTopology;
                 do
                 {
-                    quads[index + offset++] = current_edge.startVertex.index;
-                    quads[index + offset++] = current_edge.endVertex.index;
-                    //quads[index++] = edge.startVertex.index;
-                    //quads[index++] = edge.endVertex.index;
-                    current_edge = current_edge.endCCWEdge;
+                    //Debug.Log("Index : " + index + " Offset : " + offset + " Previous edge : " + previousEdge.index);
+                    //Debug.Log("Start Vertex : " +  current_edge.startVertex.index);
+                    int indiceVertex = (current_edge.endCWEdge != null && current_edge.endCWEdge.index == previousEdge.index)
+                        ? current_edge.endVertex.index
+                        : current_edge.startVertex.index;
+                    //Debug.Log("Indice Vertex : " + indiceVertex);
+                    quads[index + offset++] = indiceVertex;
+                    //quads[index + offset++] = current_edge.endVertex.index;
+                    WingedEdge tmp = current_edge;
+                    //Debug.Log("Current edge index : " + current_edge.index + " First edge " + firstEdge.index + " After Previous edge : " + tmp.index);
+                    
+                    current_edge = (current_edge.endCWEdge != null && (current_edge.endCWEdge.index == firstEdge.index || current_edge.endCWEdge.index == previousEdge.index)) 
+                        ? current_edge.startCCWEdge 
+                        : current_edge.endCCWEdge;
+                    previousEdge = tmp;
+                    //current_edge = current_edge.endCCWEdge;
+                    //Debug.Log("Current CCW edge  : " + current_edge.index + " First edge end CCW " + firstEdge.endCCWEdge.index);
                 } while (current_edge != firstEdge);
             }
 
+            newMesh.vertices = vertices;
+            newMesh.SetIndices(quads, MeshTopology.Quads, 0);
+            newMesh.RecalculateBounds();
+            newMesh.RecalculateNormals();
             return newMesh;
         }
         
