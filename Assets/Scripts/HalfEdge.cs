@@ -1,9 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.AI;
 
 namespace HalfEdge
 {
@@ -209,7 +207,7 @@ namespace HalfEdge
                 // }
             }
 
-            Debug.Log(myDebug);
+            //Debug.Log(myDebug);
         }
         public Mesh ConvertToFaceVertexMesh()
         {
@@ -349,21 +347,23 @@ namespace HalfEdge
             this.CatmullClarkCreateNewPoints(out facePoints, out edgePoints, out vertexPoints);
 
             // Mise à jour des nouvelles positions
-            for (int j = 0; j < vertexPoints.Count; j++)
+            for (int i = 0; i < vertexPoints.Count; i++)
             {
-                this.vertices[j].position = vertexPoints[j];
+                this.vertices[i].position = vertexPoints[i];
             }
 
             // Split des edges
-            foreach (HalfEdge edge in this.edges)
+            for (int i = 0; i < edgePoints.Count; i++)
             {
-                this.SplitEdge(edge, edgePoints[edge.index]);
+                HalfEdge edge = this.edges[i];
+                this.SplitEdge(edge, edgePoints[i]);
             }
 
             // Split des faces
-            foreach (Face face in this.faces)
+            for (int i = 0; i < facePoints.Count; i++)
             {
-                this.SplitFace(face, facePoints[face.index]);
+                Face face = this.faces[i];
+                this.SplitFace(face, facePoints[i]);
             }   
         }
 
@@ -485,29 +485,35 @@ namespace HalfEdge
         public void SplitEdge(HalfEdge edge, Vector3 splittingPoint)
         {
             // On créer le edge point
-            Vertex edgePointVertex = new Vertex(edge.sourceVertex.index + 1, splittingPoint);
-            HalfEdge edgePoint = new HalfEdge(edge.index + 1, edgePointVertex, edge.face, edge, edge.nextEdge, edge.twinEdge);
+            Vertex edgePointVertex = new Vertex(this.vertices.Count, splittingPoint);
+            HalfEdge edgePoint = new HalfEdge(this.edges.Count, edgePointVertex, edge.face, edge, edge.nextEdge, edge.twinEdge);
             edgePointVertex.outgoingEdge = edgePoint;
 
             // On positionne correctement la nouvelle vertices créée
-            this.vertices.Add(null);
-            for (int i = edgePointVertex.index; i < this.vertices.Count - 1; i ++)
-            {
-                this.vertices[i].index = i + 1;
-                this.vertices[i + 1] = this.vertices[i];
-            }
-            this.vertices[edgePointVertex.index] = edgePointVertex;
+            this.vertices.Add(edgePointVertex);
+            //for (int i = edgePointVertex.index; i < this.vertices.Count - 1; i++)
+            //{
+            //    this.vertices[i].index = i + 1;
+            //    this.vertices[i + 1] = this.vertices[i];
+            //}
+            //this.vertices[edgePointVertex.index] = edgePointVertex;
 
             // On positionne correctement la nouvelle edge créee
-            this.edges.Add(null);
-            for (int i = edgePoint.index + 1; i < this.edges.Count - 1; i++)
-            {
-                this.edges[i].index = i + 1;
-                this.edges[i + 1] = this.edges[i];
-            }
-            this.edges[edgePoint.index] = edgePoint;
+            this.edges.Add(edgePoint);
+            //for (int i = edgePoint.index + 1; i < this.edges.Count - 1; i++)
+            //{
+            //    this.edges[i].index = i + 1;
+            //    this.edges[i + 1] = this.edges[i];
+            //}
+            //this.edges[edgePoint.index] = edgePoint;
+            edge.nextEdge.prevEdge = edgePoint;
+            edge.nextEdge = edgePoint;
 
-            edge.nextEdge = edgePoint;  
+            /*
+                 
+                       TO DO : AJOUTER LES TWIN SUR LES NOUVELLES EDGES
+                 
+            */
         }
 
         /// <summary>
@@ -518,12 +524,16 @@ namespace HalfEdge
         public void SplitFace(Face face, Vector3 splittingPoint)
         {
             Vertex facePointVertex = new Vertex(this.vertices.Count, splittingPoint);
+            
 
             HalfEdge firstHalfEdge = face.edge;
             HalfEdge currentEdge = firstHalfEdge;
 
-            int indexFace = face.index;
+            Dictionary<string, int> mapOfNewHalfEdgeCreated = new Dictionary<string, int>();
+
+            int indexFace = this.faces.Count;
             int indexHalfEdge = this.edges.Count;
+            int oldFacesSize = this.faces.Count;
             do
             {
                 // Récupération des edges points
@@ -531,22 +541,61 @@ namespace HalfEdge
                 HalfEdge nextEdge = currentEdge.nextEdge;
 
                 // Création des nouvelles faces et des nouveaux edges
-                Face currentFace = indexFace == face.index ? face : new Face(indexFace);
-                HalfEdge prevEdgeToCenter = new HalfEdge(indexHalfEdge++, facePointVertex, currentFace, prevEdge, null, null);
-                HalfEdge nextEdgeToCenter = new HalfEdge(indexHalfEdge++, facePointVertex, currentFace, currentEdge, prevEdgeToCenter, null);
-                
-                prevEdgeToCenter.nextEdge = nextEdgeToCenter;
-                currentFace.edge = prevEdgeToCenter;
+                Face currentFace = indexFace == oldFacesSize ? face : new Face(indexFace);
+
+                HalfEdge nextEdgeToCenter = new HalfEdge(indexHalfEdge++, currentEdge.nextEdge.sourceVertex, currentFace, currentEdge, null, null);
+                HalfEdge prevEdgeToCenter = new HalfEdge(indexHalfEdge++, facePointVertex, currentFace, nextEdgeToCenter, prevEdge, null); ;
+
+                prevEdge.prevEdge = prevEdgeToCenter;
+                currentEdge.nextEdge = nextEdgeToCenter;
+                nextEdgeToCenter.nextEdge = prevEdgeToCenter;
+                currentFace.edge = nextEdgeToCenter;
                 facePointVertex.outgoingEdge = prevEdgeToCenter;
 
                 // Ajout de la face et des nouvelles edges
-                this.faces.Add(currentFace);
-                this.edges.Add(prevEdgeToCenter);
+                if (indexFace != oldFacesSize)
+                {
+                    this.faces.Add(currentFace);
+                }
+
+                // Ajout des edges dans les edges du Mesh
                 this.edges.Add(nextEdgeToCenter);
+                this.edges.Add(prevEdgeToCenter);
+
+                //Ajout des nouvelles edges dans un dictionnaire temporaire afin d'y configurer les twins
+                int startIndex = prevEdgeToCenter.sourceVertex.index;
+                int endIndex = prevEdgeToCenter.nextEdge.sourceVertex.index;
+                string newKey = startIndex + "|" + endIndex;
+                mapOfNewHalfEdgeCreated.Add(newKey, prevEdgeToCenter.index);
+
+                startIndex = nextEdgeToCenter.sourceVertex.index;
+                endIndex = nextEdgeToCenter.nextEdge.sourceVertex.index;
+                newKey = startIndex + "|" + endIndex;
+                mapOfNewHalfEdgeCreated.Add(newKey, nextEdgeToCenter.index);
 
                 indexFace++;
-                currentEdge = nextEdge;
+                currentEdge = nextEdge.nextEdge;
             } while (firstHalfEdge != currentEdge);
+
+            // Mise à jour des twin dans la liste des edges avec les edges précemment créé
+            foreach (KeyValuePair<string, int> kp in mapOfNewHalfEdgeCreated)
+            {
+                string key = kp.Key;
+                int value = kp.Value;
+                int startIndex = int.Parse(key.Split("|")[0]);
+                int endIndex = int.Parse(key.Split("|")[1]);
+                string reversedKey = endIndex + "|" + startIndex;
+
+                int twinIndex;
+                if (mapOfNewHalfEdgeCreated.TryGetValue(reversedKey, out twinIndex))
+                {
+                    this.edges[twinIndex].twinEdge = this.edges[value];
+                    this.edges[value].twinEdge = this.edges[twinIndex];
+                }
+            }
+
+            // Ajout de la vertice face point au tableau des vertices du Mesh
+            this.vertices.Add(facePointVertex);
         }
     }
 }
