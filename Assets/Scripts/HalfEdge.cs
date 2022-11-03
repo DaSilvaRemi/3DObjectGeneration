@@ -364,7 +364,12 @@ namespace HalfEdge
             {
                 Face face = this.faces[i];
                 this.SplitFace(face, facePoints[i]);
-            }   
+            }
+
+            // Remise en place de toutes les vertices, edges et faces dans le tableau
+            //this.vertices.OrderBy(v => v.index);
+            //this.faces.OrderBy(f => f.index);
+            //this.edges.OrderBy(e => e.index);
         }
 
         /// <summary>
@@ -466,7 +471,9 @@ namespace HalfEdge
                     a = (1 / nbIncidentEdges) * Q;
                     b = (2 / nbIncidentEdges) * R;
                     c = ((nbIncidentEdges - 3) / nbIncidentEdges) * V;
-                } else
+                } 
+                // Dans le cas où nous sommes en bordure nous calculons uniquement la moyenne des midspoints et de V
+                else
                 {
                     Vector3 R = midPointsSum + v.position;
                     a = R / (nbMidPointAdjacent + 1);
