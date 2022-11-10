@@ -4,6 +4,11 @@ using UnityEditor;
 using UnityEngine;
 using WingedEdge;
 using HalfEdge;
+using Unity.Mathematics;
+using static Unity.Mathematics.math;
+
+delegate Vector3 ComputePosDelegate(float kX, float kZ);
+delegate float3 ComputePosDelegate_SIMD(float3 k);
 
 [RequireComponent(typeof(MeshFilter))]
 public class MeshGeneratorQuad : MonoBehaviour
@@ -13,7 +18,7 @@ public class MeshGeneratorQuad : MonoBehaviour
     [SerializeField] bool m_DisplaySegment = true;
 
     [SerializeField] AnimationCurve m_Profile;
-    delegate Vector3 ComputePosDelegate(float kX, float kZ);
+
     MeshFilter m_Mf;
 
     void Start()
@@ -52,6 +57,61 @@ public class MeshGeneratorQuad : MonoBehaviour
             return OOmega + OOmegaP;
         });*/
 
+        //bool bothSides = true;
+        //m_Mf.mesh = CreateNormalizedGridXZ_SIMD((bothSides ? 2 : 1) * int3(200, 200, 1),
+        //    (k) => {
+        //        if (bothSides) k = abs((k - .5f) * 2);
+        //        //return lerp(float3(-5f, 0, -5f), float3(5f, 0, 5f), k.xzy);
+        //        //return lerp(float3(-5, 1, -5), float3(5, 0, 5), float3(k.x, step(.2f, k.x), k.y));
+        //        //return lerp(float3(-5, 1, -5), float3(5, 0, 5), float3(k.x, smoothstep(0.5f-0.1f, 0.5f+0.1f, k.x), k.y));
+        //        return lerp(float3(-5, 1, -5), float3(5, 0, 5), float3(
+        //            k.x,
+        //            0.5f - 0.1f + 0.5f + 0.1f + 0.5f * sin(k.x * 2 * PI * 4) * cos(k.y * 2 * PI * 3) + 1,
+        //            //smoothstep(0.5f - 0.1f, 0.5f + 0.1f, 0.5f * sin(k.x * 2 * PI * 4) * cos(k.y * 2 * PI * 3) + 1),
+        //            k.y
+        //        ));
+        //    }
+        //);
+
+        //int3 nCells = int3(3, 3, 1);
+        //int3 nSegmentsPerCell = int3(100, 100, 1);
+        //float3 kStep  = float3(1) / (nCells*nSegmentsPerCell);
+
+        //float3 cellSize = float3(1, .5f, 1);
+
+        // int3 nCells = int3(3, 3, 1);
+
+        // int3 nSegmentsPerCell = int3(100, 100, 1);
+        // float3 kStep = float3(1) / (nCells * nSegmentsPerCell);
+        // float3 cellSize = float3(1, .5f, 1);
+
+        // m_Mf.mesh = CreateNormalizedGridXZ_SIMD(
+
+        //     nCells * nSegmentsPerCell,
+
+        //     (k) =>
+
+        //     {
+        //         // calculs sur la grille normalisée
+        //         int3 index = (int3)floor(k / kStep);
+        //         int3 localIndex = index % nSegmentsPerCell;
+        //         int3 indexCell = index / nSegmentsPerCell;
+        //         float3 relIndexCell = (float3)indexCell / nCells;
+
+        //         // calculs sur les positions dans l'espace
+        //         /*
+        //         float3 cellOriginPos = lerp(
+        //             -cellSize * nCells.xzy * .5f,
+        //             cellSize * nCells.xzy * .5f,
+        //             relIndexCell.xzy);
+
+        //         */
+        //         float3 cellOriginPos = floor(k * nCells).xzy; // Theo's style ... ne prend pas en compte cellSize
+        //         k = frac(k * nCells);
+        //         return cellOriginPos + cellSize * float3(k.x, smoothstep(0.2f - .05f, .2f + .05f, k.x * k.y), k.y);
+        //     }
+        //     );
+
         //m_Mf.mesh = CreateBox(new Vector3(5, 5, 5));
         //m_Mf.mesh = CreateChips(new Vector3(5, 5, 5));
         //m_Mf.mesh = this.CreateRegularPolygon(new Vector3(8, 0, 8), 20);
@@ -61,10 +121,10 @@ public class MeshGeneratorQuad : MonoBehaviour
         //GUIUtility.systemCopyBuffer = wingedEdgeMesh.ConvertToCSVFormat("\t");
         //m_Mf.mesh = wingedEdgeMesh.ConvertToFaceVertexMesh();
 
-        HalfEdgeMesh halfEdgeMesh = new HalfEdgeMesh(m_Mf.mesh);
-        halfEdgeMesh.SubdivideCatmullClark();
-        GUIUtility.systemCopyBuffer = halfEdgeMesh.ConvertToCSVFormat("\t");
-        m_Mf.mesh = halfEdgeMesh.ConvertToFaceVertexMesh();
+        //HalfEdgeMesh halfEdgeMesh = new HalfEdgeMesh(m_Mf.mesh);
+        //halfEdgeMesh.SubdivideCatmullClark();
+        //GUIUtility.systemCopyBuffer = halfEdgeMesh.ConvertToCSVFormat("\t");
+        //m_Mf.mesh = halfEdgeMesh.ConvertToFaceVertexMesh();
 
         //GUIUtility.systemCopyBuffer = ConvertToCSV("\t");
         //Debug.Log(ConvertToCSV("\t"));
@@ -213,6 +273,47 @@ public class MeshGeneratorQuad : MonoBehaviour
                 quads[index++] = i * (nSegmentsX + 1) + j + 1;
 
             }
+        }
+
+        mesh.vertices = vertices;
+        mesh.SetIndices(quads, MeshTopology.Quads, 0); ;
+
+        return mesh;
+    }
+
+    Mesh CreateNormalizedGridXZ_SIMD(int3 nSegments, ComputePosDelegate_SIMD computePos = null)
+    {
+        Mesh mesh = new Mesh();
+        mesh.name = "normalizedgrid";
+
+        Vector3[] vertices = new Vector3[(nSegments.x + 1) * (nSegments.y + 1)];
+        int[] quads = new int[nSegments.x * nSegments.y * 4];
+
+        int index = 0;
+        for (int i = 0; i < nSegments.y + 1; i++)
+        {
+            for (int j = 0; j < nSegments.x + 1; j++)
+            {
+                float3 k = float3(j, i, 0) / nSegments;  // coefficient d'avancement sur la boucle, entre 0 et 100%
+                vertices[index++] = computePos != null ? computePos(k) : k;
+            }
+        }
+
+        index = 0;
+        int offset = 0;
+        int nextOffset = offset;
+        for (int i = 0; i < nSegments.y; i++)
+        {
+            nextOffset = offset + nSegments.x + 1;
+            for (int j = 0; j < nSegments.x; j++)
+            {
+                quads[index++] = offset + j;
+                quads[index++] = nextOffset + j;
+                quads[index++] = nextOffset + j + 1;
+                quads[index++] = offset + j + 1;
+
+            }
+            offset = nextOffset;
         }
 
         mesh.vertices = vertices;

@@ -154,7 +154,7 @@ namespace WingedEdge
 
                 for(int j = 0; j < nVerticesForTopology; j++){
                     WingedEdge currentWingedEdge = wingedEdges[j];
-                    if( ! currentWingedEdge.rightFace.Equals(currentFace)){
+                    if(!currentWingedEdge.rightFace.Equals(currentFace)){
                         // Cas d'une edge déjà créée auparavant
                         currentWingedEdge.leftFace = currentFace;
 
@@ -201,20 +201,20 @@ namespace WingedEdge
                 {
                     //Debug.Log("Index : " + index + " Offset : " + offset + " Previous edge : " + previousEdge.index);
                     //Debug.Log("Start Vertex : " +  current_edge.startVertex.index);
+                    
+                    // Récupération de l'indice de la vertice
                     int indiceVertex = (current_edge.endCWEdge != null && current_edge.endCWEdge.index == previousEdge.index)
                         ? current_edge.endVertex.index
                         : current_edge.startVertex.index;
                     //Debug.Log("Indice Vertex : " + indiceVertex);
                     quads[index + offset++] = indiceVertex;
-                    //quads[index + offset++] = current_edge.endVertex.index;
                     WingedEdge tmp = current_edge;
-                    //Debug.Log("Current edge index : " + current_edge.index + " First edge " + firstEdge.index + " After Previous edge : " + tmp.index);
-                    
+                   
+                    // Récupération de la prochaine edge qu'on va parcourir
                     current_edge = (current_edge.endCWEdge != null && (current_edge.endCWEdge.index == firstEdge.index || current_edge.endCWEdge.index == previousEdge.index)) 
                         ? current_edge.startCCWEdge 
                         : current_edge.endCCWEdge;
                     previousEdge = tmp;
-                    //current_edge = current_edge.endCCWEdge;
                     //Debug.Log("Current CCW edge  : " + current_edge.index + " First edge end CCW " + firstEdge.endCCWEdge.index);
                 } while (current_edge != firstEdge);
             }

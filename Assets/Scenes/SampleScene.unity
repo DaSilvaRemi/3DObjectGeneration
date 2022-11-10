@@ -346,7 +346,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_DisplayEdges: 1
-  m_DisplayVertices: 1
+  m_DisplayVertices: 0
   m_DisplaySegment: 1
   m_Profile:
     serializedVersion: 2
