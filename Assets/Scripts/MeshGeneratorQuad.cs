@@ -13,13 +13,16 @@ delegate float3 ComputePosDelegate_SIMD(float3 k);
 [RequireComponent(typeof(MeshFilter))]
 public class MeshGeneratorQuad : MonoBehaviour
 {
-    [SerializeField] bool m_DisplayEdges = true;
-    [SerializeField] bool m_DisplayVertices = true;
-    [SerializeField] bool m_DisplaySegment = true;
+    [SerializeField] bool m_DisplayMeshInfo = true;
+    [SerializeField] bool m_DisplayMeshEdges = true;
+    [SerializeField] bool m_DisplayMeshVertices = true;
+    [SerializeField] bool m_DisplayMeshFaces = true;
 
     [SerializeField] AnimationCurve m_Profile;
 
     MeshFilter m_Mf;
+    WingedEdgeMesh m_WingedEdgeMesh;
+    HalfEdgeMesh m_HalfEdgeMesh;
 
     void Start()
     {
@@ -519,8 +522,17 @@ public class MeshGeneratorQuad : MonoBehaviour
 
     private void OnDrawGizmos()
     {
-        if (!(m_Mf && m_Mf.mesh) || !this.m_DisplayEdges)
-            return;
+        if (!(m_Mf && m_Mf.mesh && m_DisplayMeshInfo)) return;
+
+        if (this.m_WingedEdgeMesh != null)
+        {
+            this.m_WingedEdgeMesh.DrawGizmos(this.m_DisplayMeshVertices, this.m_DisplayMeshEdges, this.m_DisplayMeshFaces, transform);
+        }
+
+        if (this.m_HalfEdgeMesh != null)
+        {
+            this.m_HalfEdgeMesh.DrawGizmos(this.m_DisplayMeshVertices, this.m_DisplayMeshEdges, this.m_DisplayMeshFaces, transform);
+        }
 
         Mesh mesh = m_Mf.mesh;
         Vector3[] vertices = mesh.vertices;
@@ -528,47 +540,50 @@ public class MeshGeneratorQuad : MonoBehaviour
 
 
         GUIStyle style = new GUIStyle();
-        if (this.m_DisplayVertices)
+        style.fontSize = 15;
+        style.normal.textColor = Color.red;
+
+
+        if (m_DisplayMeshVertices)
         {
-            style.fontSize = 20;
-            style.normal.textColor = Color.red;
             for (int i = 0; i < vertices.Length; i++)
             {
                 Vector3 worldPos = transform.TransformPoint(vertices[i]);
-                Handles.Label(worldPos, i.ToString() + " " + worldPos.ToString(), style);
+                Handles.Label(worldPos, i.ToString(), style);
             }
         }
 
-        if (this.m_DisplaySegment)
+        Gizmos.color = Color.black;
+        style.normal.textColor = Color.blue;
+
+
+        for (int i = 0; i < quads.Length / 4; i++)
         {
-            Gizmos.color = Color.black;
-            style.fontSize = 15;
-            style.normal.textColor = Color.blue;
+            int index1 = quads[4 * i];
+            int index2 = quads[4 * i + 1];
+            int index3 = quads[4 * i + 2];
+            int index4 = quads[4 * i + 3];
 
-            for (int i = 0; i < quads.Length / 4; i++)
+            Vector3 pt1 = transform.TransformPoint(vertices[index1]);
+            Vector3 pt2 = transform.TransformPoint(vertices[index2]);
+            Vector3 pt3 = transform.TransformPoint(vertices[index3]);
+            Vector3 pt4 = transform.TransformPoint(vertices[index4]);
+
+
+            if (m_DisplayMeshEdges)
             {
-                int index1 = quads[4 * i];
-                int index2 = quads[4 * i + 1];
-                int index3 = quads[4 * i + 2];
-                int index4 = quads[4 * i + 3];
-
-
-                Vector3 pt1 = transform.TransformPoint(vertices[index1]);
-                Vector3 pt2 = transform.TransformPoint(vertices[index2]);
-                Vector3 pt3 = transform.TransformPoint(vertices[index3]);
-                Vector3 pt4 = transform.TransformPoint(vertices[index4]);
-
                 Gizmos.DrawLine(pt1, pt2);
                 Gizmos.DrawLine(pt2, pt3);
                 Gizmos.DrawLine(pt3, pt4);
                 Gizmos.DrawLine(pt4, pt1);
+            }
 
-                if (this.m_DisplayVertices)
-                {
-                    string str = string.Format("{0}:{1},{2},{3},{4}", i, index1, index2, index3, index4);
-                    Handles.Label((pt1 + pt2 + pt3 + pt4) / 4.0f, str, style);
-                }
+            if (m_DisplayMeshFaces)
+            {
+                string str = string.Format("{0} ({1},{2},{3},{4})", i, index1, index2, index3, index4);
+                Handles.Label((pt1 + pt2 + pt3 + pt4) / 4.0f, str, style);
             }
         }
+
     }
 }

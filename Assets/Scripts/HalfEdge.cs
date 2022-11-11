@@ -176,7 +176,7 @@ namespace HalfEdge
             }
 
             string myDebug = "";
-            foreach(KeyValuePair<string, int> kp in mapOfIndex)
+            foreach (KeyValuePair<string, int> kp in mapOfIndex)
             {
                 string key = kp.Key;
                 int value = kp.Value;
@@ -186,9 +186,10 @@ namespace HalfEdge
                 // Debug.Log("" + startIndex + " : " + endIndex);
                 string reversedKey = "" + endIndex + "|" + startIndex;
 
-                myDebug += key + " => " + value +   "\n";
+                myDebug += key + " => " + value + "\n";
                 int reversedValue;
-                if(mapOfIndex.TryGetValue(reversedKey, out reversedValue)){
+                if (mapOfIndex.TryGetValue(reversedKey, out reversedValue))
+                {
 
 
                     this.edges[reversedValue].twinEdge = this.edges[value];
@@ -297,35 +298,48 @@ namespace HalfEdge
             return header + string.Join("\n", strings);
         }
 
-        public void DrawGizmos(bool drawVertices, bool drawEdges, bool drawFaces)
+        public void DrawGizmos(bool drawVertices, bool drawEdges, bool drawFaces, Transform transform)
         {
+            GUIStyle style = new GUIStyle();
+            style.fontSize = 15;
+            style.normal.textColor = Color.red;
+
             if (drawVertices)
             {
-                foreach (Vertex v in this.vertices)
+                for (int i = 0; i < this.vertices.Count; i++)
                 {
-                    Gizmos.DrawSphere(v.position, 0.1f);
+                    Vector3 worldPos = transform.TransformPoint(vertices[i].position);
+                    Gizmos.DrawSphere(worldPos, 0.1f);
+                    Handles.Label(worldPos, i.ToString(), style);
                 }
             }
             if (drawEdges)
             {
-                foreach (HalfEdge e in this.edges)
+                for (int i = 0; i < this.edges.Count; i++)
                 {
-                    Gizmos.DrawLine(e.sourceVertex.position, e.nextEdge.sourceVertex.position);
+                    Vector3 worldPosStart = transform.TransformPoint(this.edges[i].sourceVertex.position);
+                    Vector3 worldPosEnd = transform.TransformPoint(this.edges[i].nextEdge.sourceVertex.position);
+                    Gizmos.DrawLine(worldPosStart, worldPosEnd);
+                    Handles.Label(worldPosEnd - worldPosStart / 2, "E : " + i, style);
                 }
             }
             if (drawFaces)
             {
-                foreach (Face f in this.faces)
+                for (int i = 0; i < this.faces.Count; i++)
                 {
-                    HalfEdge e = f.edge;
+                    HalfEdge e = this.faces[i].edge;
                     Vector3 p0 = e.sourceVertex.position;
                     Vector3 p1 = e.nextEdge.sourceVertex.position;
                     Vector3 p2 = e.nextEdge.nextEdge.sourceVertex.position;
-                    Vector3 p3 = e.nextEdge.nextEdge.nextEdge.sourceVertex.position;
-                    Gizmos.DrawLine(p0, p1);
-                    Gizmos.DrawLine(p1, p2);
-                    Gizmos.DrawLine(p2, p3);
-                    Gizmos.DrawLine(p3, p0);
+                    Vector3 p3 = this.nVerticesForTopology > 3 ? e.nextEdge.nextEdge.nextEdge.sourceVertex.position : Vector3.zero;
+
+                    int index1 = e.index;
+                    int index2 = e.nextEdge.index;
+                    int index3 = e.nextEdge.nextEdge.index;
+                    int index4 = this.nVerticesForTopology > 3 ? e.nextEdge.nextEdge.nextEdge.index : -1;
+
+                    string str = string.Format("{0} ({1},{2},{3},{4})", i, index1, index2, index3, index4);
+                    Handles.Label((p0 + p1 + p2 + p3) / this.nVerticesForTopology, str, style);
                 }
             }
         }
@@ -378,7 +392,7 @@ namespace HalfEdge
         /// <param name="facePoints"></param>
         /// <param name="edgePoints"></param>
         /// <param name="vertexPoints"></param>
-        public void CatmullClarkCreateNewPoints(out List<Vector3> facePoints, out List<Vector3>edgePoints, out List<Vector3> vertexPoints)
+        public void CatmullClarkCreateNewPoints(out List<Vector3> facePoints, out List<Vector3> edgePoints, out List<Vector3> vertexPoints)
         {
             facePoints = new List<Vector3>();
             edgePoints = new List<Vector3>();
@@ -390,7 +404,7 @@ namespace HalfEdge
             {
                 Vector3 meanPos = Vector3.zero;
 
-                for(int j = face.index; j < face.index + this.nVerticesForTopology; j++)
+                for (int j = face.index; j < face.index + this.nVerticesForTopology; j++)
                 {
                     meanPos += this.vertices[j].position;
                 }
@@ -412,13 +426,13 @@ namespace HalfEdge
                 // Calcul de l'edge point et du midPoint. Si l'edge est en bodure l'edge point vaudra midPoint
                 Vector3 midPoint = (srcVertexPos + endVertexPos) / 2;
                 Vector3 edgePoint = twinEdge == null ? midPoint : (edgeFacePoint + edgeTwinFacePoint + srcVertexPos + endVertexPos) / 4;
-                
+
                 edgePoints.Add(edgePoint);
                 midPoints.Add(midPoint);
             }
 
             // On recalcule la position de chaque vertices
-            foreach(Vertex v in this.vertices)
+            foreach (Vertex v in this.vertices)
             {
                 Dictionary<int, HalfEdge> adjacentEdges = new Dictionary<int, HalfEdge>();
 
@@ -471,7 +485,7 @@ namespace HalfEdge
                     a = (1 / nbIncidentEdges) * Q;
                     b = (2 / nbIncidentEdges) * R;
                     c = ((nbIncidentEdges - 3) / nbIncidentEdges) * V;
-                } 
+                }
                 // Dans le cas où nous sommes en bordure nous calculons uniquement la moyenne des midspoints et de V
                 else
                 {
@@ -531,7 +545,7 @@ namespace HalfEdge
         public void SplitFace(Face face, Vector3 splittingPoint)
         {
             Vertex facePointVertex = new Vertex(this.vertices.Count, splittingPoint);
-            
+
 
             HalfEdge firstHalfEdge = face.edge;
             HalfEdge currentEdge = firstHalfEdge;

@@ -128,9 +128,10 @@ namespace WingedEdge
 
                 WingedEdge[] wingedEdges = new WingedEdge[nVerticesForTopology];
 
-                for(int j = 0; j < nVerticesForTopology; j++){
+                for (int j = 0; j < nVerticesForTopology; j++)
+                {
                     Vertex start = faceVertex[j];
-                    Vertex end = (j < nVerticesForTopology-1) ? faceVertex[j + 1] : faceVertex[0];
+                    Vertex end = (j < nVerticesForTopology - 1) ? faceVertex[j + 1] : faceVertex[0];
 
                     // Check si edge existante dans le dictionnaire :
                     long min = Mathf.Min(start.index, end.index);
@@ -139,22 +140,25 @@ namespace WingedEdge
                     long key = min + (max << 32);
 
                     WingedEdge we;
-                    if( ! mapWingedEdges.TryGetValue(key, out we)){
+                    if (!mapWingedEdges.TryGetValue(key, out we))
+                    {
                         // Créer l'edge sans CW et CCW
                         we = new WingedEdge(indexWingedEdge++, start, end, null, currentFace);
                         mapWingedEdges.Add(key, we);
                         this.edges.Add(we);
                         currentFace.edge = we;
-                        
+
                         start.edge = we;
                         // end.edge = we;
                     }
                     wingedEdges[j] = we;
                 }
 
-                for(int j = 0; j < nVerticesForTopology; j++){
+                for (int j = 0; j < nVerticesForTopology; j++)
+                {
                     WingedEdge currentWingedEdge = wingedEdges[j];
-                    if(!currentWingedEdge.rightFace.Equals(currentFace)){
+                    if (!currentWingedEdge.rightFace.Equals(currentFace))
+                    {
                         // Cas d'une edge déjà créée auparavant
                         currentWingedEdge.leftFace = currentFace;
 
@@ -163,7 +167,8 @@ namespace WingedEdge
                         currentWingedEdge.endCWEdge = (j == 0) ? wingedEdges[nVerticesForTopology - 1] : wingedEdges[j - 1];
                         currentWingedEdge.endVertex.edge = (j == 0) ? wingedEdges[nVerticesForTopology - 1] : wingedEdges[j - 1];
                     }
-                    else {
+                    else
+                    {
                         currentWingedEdge.rightFace = currentFace;
 
                         // Edges adjacentes "simples"
@@ -188,7 +193,7 @@ namespace WingedEdge
                 vertices[i] = this.vertices[i].position;
             }
 
-            // Parcourir le tableau de faces récuppérent son edge puis créer les Quads
+            // Parcourir le tableau de faces récupérant son edge puis créer les Quads
             for (int i = 0; i < this.faces.Count; i++)
             {
                 Face face = this.faces[i];
@@ -201,7 +206,7 @@ namespace WingedEdge
                 {
                     //Debug.Log("Index : " + index + " Offset : " + offset + " Previous edge : " + previousEdge.index);
                     //Debug.Log("Start Vertex : " +  current_edge.startVertex.index);
-                    
+
                     // Récupération de l'indice de la vertice
                     int indiceVertex = (current_edge.endCWEdge != null && current_edge.endCWEdge.index == previousEdge.index)
                         ? current_edge.endVertex.index
@@ -209,10 +214,10 @@ namespace WingedEdge
                     //Debug.Log("Indice Vertex : " + indiceVertex);
                     quads[index + offset++] = indiceVertex;
                     WingedEdge tmp = current_edge;
-                   
+
                     // Récupération de la prochaine edge qu'on va parcourir
-                    current_edge = (current_edge.endCWEdge != null && (current_edge.endCWEdge.index == firstEdge.index || current_edge.endCWEdge.index == previousEdge.index)) 
-                        ? current_edge.startCCWEdge 
+                    current_edge = (current_edge.endCWEdge != null && (current_edge.endCWEdge.index == firstEdge.index || current_edge.endCWEdge.index == previousEdge.index))
+                        ? current_edge.startCCWEdge
                         : current_edge.endCCWEdge;
                     previousEdge = tmp;
                     //Debug.Log("Current CCW edge  : " + current_edge.index + " First edge end CCW " + firstEdge.endCCWEdge.index);
@@ -225,7 +230,7 @@ namespace WingedEdge
             newMesh.RecalculateNormals();
             return newMesh;
         }
-        
+
         public string ConvertToCSVFormat(string separator = "\t")
         {
             int tabSize = Mathf.Max(edges.Count, faces.Count, vertices.Count);
@@ -239,7 +244,7 @@ namespace WingedEdge
 
 
             // WingedEdges
-            for(int i = 0 ; i < edges.Count ; i++)
+            for (int i = 0; i < edges.Count; i++)
             {
                 WingedEdge we = edges[i];
                 strings[i] += we.index + separator;
@@ -253,24 +258,29 @@ namespace WingedEdge
                 */
 
                 strings[i] += we.startCWEdge.index + ", ";
-                if(we.endCWEdge != null){
+                if (we.endCWEdge != null)
+                {
                     strings[i] += we.endCWEdge.index;
                 }
-                else{
+                else
+                {
                     strings[i] += "null";
                 }
 
                 strings[i] += separator;
 
-                if(we.startCCWEdge != null){
-                   strings[i] += we.startCCWEdge.index;
+                if (we.startCCWEdge != null)
+                {
+                    strings[i] += we.startCCWEdge.index;
                 }
-                else{
+                else
+                {
                     strings[i] += "null";
                 }
                 strings[i] += ", " + we.endCCWEdge.index + separator + separator;
             }
-            for(int i = edges.Count ; i < tabSize ; i++){
+            for (int i = edges.Count; i < tabSize; i++)
+            {
                 // Compléter les colonnes restantes par des separator (il peut y avoir ici des separator en trop)
                 strings[i] += separator + separator + separator + separator + separator;
             }
@@ -278,13 +288,14 @@ namespace WingedEdge
 
 
             // Faces
-            for(int i = 0 ; i < faces.Count ; i++)
+            for (int i = 0; i < faces.Count; i++)
             {
                 Face f = faces[i];
                 strings[i] += f.index + separator;
                 strings[i] += f.edge.index + separator + separator;
             }
-            for(int i = faces.Count ; i < tabSize ; i++){
+            for (int i = faces.Count; i < tabSize; i++)
+            {
                 // Compléter les colonnes restantes par des separator
                 strings[i] += separator + separator + separator;
             }
@@ -292,7 +303,7 @@ namespace WingedEdge
 
 
             // Vertex
-            for(int i = 0 ; i < vertices.Count ; i++)
+            for (int i = 0; i < vertices.Count; i++)
             {
                 Vertex v = vertices[i];
                 strings[i] += v.index + separator;
@@ -310,33 +321,66 @@ namespace WingedEdge
             return header + string.Join("\n", strings);
         }
 
-        public void DrawGizmos(bool drawVertices, bool drawEdges, bool drawFaces)
+        public void DrawGizmos(bool drawVertices, bool drawEdges, bool drawFaces, Transform transform)
         {
+            GUIStyle style = new GUIStyle();
+            style.fontSize = 15;
+            style.normal.textColor = Color.red;
+
             if (drawVertices)
             {
-                foreach (Vertex vertex in this.vertices)
+                for (int i = 0; i < this.vertices.Count; i++)
                 {
-                    Gizmos.DrawSphere(vertex.position, 0.1f);
+                    Vector3 worldPos = transform.TransformPoint(vertices[i].position);
+                    Gizmos.DrawSphere(worldPos, 0.1f);
+                    Handles.Label(worldPos, i.ToString(), style);
                 }
             }
+
+            style.normal.textColor = Color.black;
+
             if (drawEdges)
             {
-                foreach (WingedEdge edge in this.edges)
+                for (int i = 0; i < this.edges.Count; i++)
                 {
-                    Gizmos.DrawLine(edge.startVertex.position, edge.endVertex.position);
+                    Vector3 worldPosStart = transform.TransformPoint(this.edges[i].startVertex.position);
+                    Vector3 worldPosEnd = transform.TransformPoint(this.edges[i].endVertex.position);
+                    Gizmos.DrawLine(worldPosStart, worldPosEnd);
+                    Handles.Label(worldPosEnd - worldPosStart / 2, "E : " + i, style);
                 }
             }
+
+            style.normal.textColor = Color.blue;
+
             if (drawFaces)
             {
-                foreach (Face face in this.faces)
+                for (int i = 0; i < this.faces.Count; i++)
                 {
-                    WingedEdge edge = face.edge;
-                    WingedEdge startEdge = edge;
+                    Face face = this.faces[i];
+                    WingedEdge current_edge = face.edge;
+                    WingedEdge firstEdge = current_edge;
+                    WingedEdge previousEdge = firstEdge;
+                    int index = i * this.nVerticesForTopology;
+                    string textToDisplay = "F" + i + " : (";
+                    Vector3 sumPos = Vector3.zero;
                     do
                     {
-                        Gizmos.DrawLine(edge.startVertex.position, edge.endVertex.position);
-                        edge = edge.startCWEdge;
-                    } while (edge != startEdge);
+                        int indiceVertex = (current_edge.endCWEdge != null && current_edge.endCWEdge.index == previousEdge.index)
+                            ? current_edge.endVertex.index
+                            : current_edge.startVertex.index;
+
+                        textToDisplay += indiceVertex + " ";
+                        sumPos += this.vertices[indiceVertex].position;
+                        WingedEdge tmp = current_edge;
+
+                        current_edge = (current_edge.endCWEdge != null && (current_edge.endCWEdge.index == firstEdge.index || current_edge.endCWEdge.index == previousEdge.index))
+                            ? current_edge.startCCWEdge
+                            : current_edge.endCCWEdge;
+                        previousEdge = tmp;
+                    } while (current_edge != firstEdge);
+
+                    textToDisplay += ")";
+                    Handles.Label(sumPos / this.nVerticesForTopology, textToDisplay);
                 }
             }
         }
