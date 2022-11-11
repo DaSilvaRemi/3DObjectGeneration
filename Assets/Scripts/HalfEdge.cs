@@ -313,6 +313,9 @@ namespace HalfEdge
                     Handles.Label(worldPos, i.ToString(), style);
                 }
             }
+
+            style.normal.textColor = Color.black;
+
             if (drawEdges)
             {
                 for (int i = 0; i < this.edges.Count; i++)
@@ -323,6 +326,9 @@ namespace HalfEdge
                     Handles.Label(worldPosEnd - worldPosStart / 2, "E : " + i, style);
                 }
             }
+
+            style.normal.textColor = Color.blue;
+
             if (drawFaces)
             {
                 for (int i = 0; i < this.faces.Count; i++)
