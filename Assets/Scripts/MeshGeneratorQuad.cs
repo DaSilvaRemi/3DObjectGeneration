@@ -17,6 +17,8 @@ public class MeshGeneratorQuad : MonoBehaviour
     [SerializeField] bool m_DisplayMeshEdges = true;
     [SerializeField] bool m_DisplayMeshVertices = true;
     [SerializeField] bool m_DisplayMeshFaces = true;
+    [SerializeField] bool m_DoCatmullClarck = false;
+    [SerializeField] int m_NbSubdivision = 0;
 
     [SerializeField] AnimationCurve m_Profile;
 
@@ -120,17 +122,24 @@ public class MeshGeneratorQuad : MonoBehaviour
         //m_Mf.mesh = this.CreateRegularPolygon(new Vector3(8, 0, 8), 20);
         //m_Mf.mesh = this.CreatePacman(new Vector3(8, 0, 8), 20);
 
-        //WingedEdgeMesh wingedEdgeMesh = new WingedEdgeMesh(m_Mf.mesh);
-        //GUIUtility.systemCopyBuffer = wingedEdgeMesh.ConvertToCSVFormat("\t");
-        //m_Mf.mesh = wingedEdgeMesh.ConvertToFaceVertexMesh();
+        //this.m_WingedEdgeMesh = new WingedEdgeMesh(m_Mf.mesh);
+        //GUIUtility.systemCopyBuffer = this.m_WingedEdgeMesh.ConvertToCSVFormat("\t");
+        //this.m_Mf.mesh = this.m_WingedEdgeMesh.ConvertToFaceVertexMesh();
 
-        //HalfEdgeMesh halfEdgeMesh = new HalfEdgeMesh(m_Mf.mesh);
-        //halfEdgeMesh.SubdivideCatmullClark();
-        //GUIUtility.systemCopyBuffer = halfEdgeMesh.ConvertToCSVFormat("\t");
-        //m_Mf.mesh = halfEdgeMesh.ConvertToFaceVertexMesh();
+        this.m_HalfEdgeMesh = new HalfEdgeMesh(m_Mf.mesh);
 
-        //GUIUtility.systemCopyBuffer = ConvertToCSV("\t");
-        //Debug.Log(ConvertToCSV("\t"));
+        
+        if(this.m_DoCatmullClarck){
+            this.m_HalfEdgeMesh.SubdivideCatmullClark(this.m_NbSubdivision);
+        }
+        
+        
+        GUIUtility.systemCopyBuffer = this.m_HalfEdgeMesh.ConvertToCSVFormat("\t");
+        this.m_Mf.mesh = this.m_HalfEdgeMesh.ConvertToFaceVertexMesh();
+        Debug.Log(this.m_HalfEdgeMesh.ConvertToCSVFormat("\t"));
+
+        //GUIUtility.systemCopyBuffer = this.ConvertToCSV("\t");
+        //Debug.Log(this.ConvertToCSV("\t"));
     }
 
     string ConvertToCSV(string separator)
@@ -526,12 +535,12 @@ public class MeshGeneratorQuad : MonoBehaviour
 
         if (this.m_WingedEdgeMesh != null)
         {
-            this.m_WingedEdgeMesh.DrawGizmos(this.m_DisplayMeshVertices, this.m_DisplayMeshEdges, this.m_DisplayMeshFaces, transform);
+            //this.m_WingedEdgeMesh.DrawGizmos(this.m_DisplayMeshVertices, this.m_DisplayMeshEdges, this.m_DisplayMeshFaces, transform);
         }
 
         if (this.m_HalfEdgeMesh != null)
         {
-            this.m_HalfEdgeMesh.DrawGizmos(this.m_DisplayMeshVertices, this.m_DisplayMeshEdges, this.m_DisplayMeshFaces, transform);
+            //this.m_HalfEdgeMesh.DrawGizmos(this.m_DisplayMeshVertices, this.m_DisplayMeshEdges, this.m_DisplayMeshFaces, transform);
         }
 
         Mesh mesh = m_Mf.mesh;

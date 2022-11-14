@@ -246,11 +246,11 @@ namespace HalfEdge
         {
             int tabSize = Mathf.Max(edges.Count, faces.Count, vertices.Count);
             List<string> strings = new List<string>(new string[tabSize]);
-            Debug.Log("edges.Count = " + edges.Count);
-            Debug.Log("faces.Count = " + faces.Count);
-            Debug.Log("vertices.Count = " + vertices.Count);
-            Debug.Log("tabSize = " + tabSize);
-            Debug.Log("strings size = " + strings.Count);
+            // Debug.Log("edges.Count = " + edges.Count);
+            // Debug.Log("faces.Count = " + faces.Count);
+            // Debug.Log("vertices.Count = " + vertices.Count);
+            // Debug.Log("tabSize = " + tabSize);
+            // Debug.Log("strings size = " + strings.Count);
 
             for (int i = 0; i < this.edges.Count; i++)
             {
@@ -518,29 +518,12 @@ namespace HalfEdge
 
             // On positionne correctement la nouvelle vertices créée
             this.vertices.Add(edgePointVertex);
-            //for (int i = edgePointVertex.index; i < this.vertices.Count - 1; i++)
-            //{
-            //    this.vertices[i].index = i + 1;
-            //    this.vertices[i + 1] = this.vertices[i];
-            //}
-            //this.vertices[edgePointVertex.index] = edgePointVertex;
 
             // On positionne correctement la nouvelle edge créee
             this.edges.Add(edgePoint);
-            //for (int i = edgePoint.index + 1; i < this.edges.Count - 1; i++)
-            //{
-            //    this.edges[i].index = i + 1;
-            //    this.edges[i + 1] = this.edges[i];
-            //}
-            //this.edges[edgePoint.index] = edgePoint;
+
             edge.nextEdge.prevEdge = edgePoint;
             edge.nextEdge = edgePoint;
-
-            /*
-                 
-                       TO DO : AJOUTER LES TWIN SUR LES NOUVELLES EDGES
-                 
-            */
         }
 
         /// <summary>
@@ -552,15 +535,14 @@ namespace HalfEdge
         {
             Vertex facePointVertex = new Vertex(this.vertices.Count, splittingPoint);
 
-
             HalfEdge firstHalfEdge = face.edge;
             HalfEdge currentEdge = firstHalfEdge;
 
             Dictionary<string, int> mapOfNewHalfEdgeCreated = new Dictionary<string, int>();
 
-            int indexFace = this.faces.Count;
+            int indexFace = this.faces.Count - 1;
             int indexHalfEdge = this.edges.Count;
-            int oldFacesSize = this.faces.Count;
+            int oldFacesSize = this.faces.Count - 1;
             do
             {
                 // Récupération des edges points
@@ -600,8 +582,8 @@ namespace HalfEdge
                 newKey = startIndex + "|" + endIndex;
                 mapOfNewHalfEdgeCreated.Add(newKey, nextEdgeToCenter.index);
 
-                indexFace++;
                 currentEdge = nextEdge.nextEdge;
+                indexFace++;
             } while (firstHalfEdge != currentEdge);
 
             // Mise à jour des twin dans la liste des edges avec les edges précemment créé
