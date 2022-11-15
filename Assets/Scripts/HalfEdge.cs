@@ -54,6 +54,19 @@ namespace HalfEdge
             this.position = pos;
             this.outgoingEdge = outgoingEdge;
         }
+
+        public List<Face> GetSharedFaces()
+        {
+            List<Face> faceEdges = new List<Face>();
+
+            HalfEdge nextEdge = this.outgoingEdge.nextEdge;
+            HalfEdge prevEdge = this.outgoingEdge.prevEdge;
+            HalfEdge prevTwinEdge = this.outgoingEdge.prevEdge.twinEdge;
+
+
+
+            return null;
+        }
     }
     public class Face
     {
@@ -74,6 +87,50 @@ namespace HalfEdge
         {
             this.index = index;
             this.edge = _edge;
+        }
+
+        public void GetEdgesVertices(out List<Vertex> faceVertices, out List<HalfEdge> faceEdges)
+        {
+            faceVertices = new List<Vertex>();
+            faceEdges = new List<HalfEdge>();
+
+            HalfEdge he = this.edge.prevEdge;
+            do
+            {
+                faceVertices.Add(he.sourceVertex);
+                faceEdges.Add(he);
+                he = he.nextEdge;
+            }
+            while (this.edge.prevEdge != he);
+        }
+
+        public List<Vertex> GetVertices()
+        {
+            List<Vertex> faceVertices = new List<Vertex>();
+
+            HalfEdge he = this.edge.prevEdge;
+            do
+            {
+                faceVertices.Add(he.sourceVertex);
+                he = he.nextEdge;
+            }
+            while (this.edge.prevEdge != he);
+
+            return faceVertices;
+        }
+
+        public List<HalfEdge> GetEdges()
+        {
+            List<HalfEdge> faceEdges = new List<HalfEdge>();
+
+            HalfEdge he = this.edge.prevEdge;
+            do
+            {
+                faceEdges.Add(he);
+                he = he.nextEdge;
+            }
+            while (this.edge.prevEdge != he);
+            return faceEdges;
         }
     }
     public class HalfEdgeMesh
@@ -410,12 +467,18 @@ namespace HalfEdge
             {
                 Vector3 meanPos = Vector3.zero;
 
-                for (int j = face.index; j < face.index + this.nVerticesForTopology; j++)
+                //for (int j = face.index; j < face.index + this.nVerticesForTopology; j++)
+                //{
+                //    meanPos += this.vertices[j].position;
+                //}
+
+                List<Vertex> faceVertices = face.GetVertices();
+                for (int j = 0; j < faceVertices.Count; j++)
                 {
-                    meanPos += this.vertices[j].position;
+                    meanPos += faceVertices[j].position;
                 }
 
-                meanPos /= this.nVerticesForTopology;
+                meanPos /= faceVertices.Count;
                 facePoints.Add(meanPos);
             }
 

@@ -30,7 +30,7 @@ public class MeshGeneratorQuad : MonoBehaviour
     {
         m_Mf = GetComponent<MeshFilter>();
         m_Mf.mesh = CreateStrip(1, new Vector3(.5f, .5f, .5f));
-        //m_Mf.mesh = this.CreateGridXZ(3, 3, new Vector3(.5f, .5f, .5f));
+        //m_Mf.mesh = this.CreateGridXZ(2, 2, new Vector3(.5f, .5f, .5f));
         //m_Mf.mesh = this.CreateNormalizedG (ridXZ(6, 6); -
         /*m_Mf.mesh = this.CreateNormalizedGridXZ(30, 5, (kX, kZ) =>
         {
@@ -117,8 +117,8 @@ public class MeshGeneratorQuad : MonoBehaviour
         //     }
         //     );
 
-        //m_Mf.mesh = CreateBox(new Vector3(5, 5, 5));
-        //m_Mf.mesh = CreateChips(new Vector3(5, 5, 5));
+        //m_Mf.mesh = CreateBox(new Vector3(3, 3, 3));
+        //m_Mf.mesh = CreateChips(new Vector3(2, 2, 2));
         //m_Mf.mesh = this.CreateRegularPolygon(new Vector3(8, 0, 8), 20);
         //m_Mf.mesh = this.CreatePacman(new Vector3(8, 0, 8), 20);
 
@@ -127,7 +127,6 @@ public class MeshGeneratorQuad : MonoBehaviour
         //this.m_Mf.mesh = this.m_WingedEdgeMesh.ConvertToFaceVertexMesh();
 
         this.m_HalfEdgeMesh = new HalfEdgeMesh(m_Mf.mesh);
-
         
         if(this.m_DoCatmullClarck){
             this.m_HalfEdgeMesh.SubdivideCatmullClark(this.m_NbSubdivision);
