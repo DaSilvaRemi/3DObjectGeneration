@@ -144,7 +144,7 @@ namespace WingedEdge
                     {
                         // Créer l'edge sans CW et CCW
                         we = new WingedEdge(indexWingedEdge++, start, end, null, currentFace);
-                        mapWingedEdges.Add(key, we);
+                        mapWingedEdges.TryAdd(key, we);
                         this.edges.Add(we);
                         currentFace.edge = we;
 
