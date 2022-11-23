@@ -664,26 +664,34 @@ namespace HalfEdge
         /// <param name="splittingPoint"></param>
         public void SplitFace(Face face, Vector3 splittingPoint)
         {
-            Vertex facePointVertex = new Vertex(this.vertices.Count, splittingPoint);
+            Vertex facePointVertex = new Vertex(this.vertices.Count, splittingPoint); // greenPoint
 
             HalfEdge firstHalfEdge = face.edge;
             HalfEdge currentEdge = firstHalfEdge;
 
             Dictionary<string, int> mapOfNewHalfEdgeCreated = new Dictionary<string, int>();
 
-            int indexFace = this.faces.Count - 1;
-            int indexHalfEdge = this.edges.Count;
-            int oldFacesSize = this.faces.Count - 1;
+            int indexFace = this.faces.Count - 1; // On prend la dernière face
+            int indexHalfEdge = this.edges.Count; // On prend l'index de l'EDGE finale
+            int oldFaceSize = indexFace;
+
+/*
+get edges // est pair
+parcourir edges
+    créer new face (4 edges, 2 premieres sont2 successives de la liste des edges we got, et 2 autres nouvelles à créer  et qui s'appuient surle centroide)
+à partir de la liste des edges on a toutes les infos pour reconnecter les choses
+
+*/
             do
             {
                 // Récupération des edges points
                 HalfEdge prevEdge = currentEdge.prevEdge;
                 HalfEdge nextEdge = currentEdge.nextEdge;
+                
+                // // Création des nouvelles faces et des nouveaux edges
+                Face currentFace = indexFace == oldFaceSize ? face : new Face(indexFace);
 
-                // Création des nouvelles faces et des nouveaux edges
-                Face currentFace = indexFace == oldFacesSize ? face : new Face(indexFace);
-
-                HalfEdge nextEdgeToCenter = new HalfEdge(indexHalfEdge++, currentEdge.nextEdge.sourceVertex, currentFace, currentEdge, null, null);
+                HalfEdge nextEdgeToCenter = new HalfEdge(indexHalfEdge++, nextEdge.sourceVertex, currentFace, currentEdge, null, null);
                 HalfEdge prevEdgeToCenter = new HalfEdge(indexHalfEdge++, facePointVertex, currentFace, nextEdgeToCenter, prevEdge, null);
 
                 prevEdge.prevEdge = prevEdgeToCenter;
@@ -692,8 +700,8 @@ namespace HalfEdge
                 currentFace.edge = nextEdgeToCenter;
                 facePointVertex.outgoingEdge = prevEdgeToCenter;
 
-                // Ajout de la face et des nouvelles edges
-                if (indexFace != oldFacesSize)
+                // // Ajout de la face et des nouvelles edges
+                if (indexFace != oldFaceSize)
                 {
                     this.faces.Add(currentFace);
                 }
