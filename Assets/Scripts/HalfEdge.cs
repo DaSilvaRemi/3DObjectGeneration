@@ -392,7 +392,6 @@ namespace HalfEdge
                 for (int i = 0; i < this.vertices.Count; i++)
                 {
                     Vector3 worldPos = transform.TransformPoint(vertices[i].position);
-                    Gizmos.DrawSphere(worldPos, 0.1f);
                     Handles.Label(worldPos, i.ToString(), style);
                 }
             }
@@ -406,7 +405,7 @@ namespace HalfEdge
                     Vector3 worldPosStart = transform.TransformPoint(this.edges[i].sourceVertex.position);
                     Vector3 worldPosEnd = transform.TransformPoint(this.edges[i].nextEdge.sourceVertex.position);
                     Gizmos.DrawLine(worldPosStart, worldPosEnd);
-                    Handles.Label(worldPosEnd - worldPosStart / 2, "E : " + i, style);
+                    Handles.Label((worldPosEnd + worldPosStart) / 2, "E : " + i, style);
                 }
             }
 

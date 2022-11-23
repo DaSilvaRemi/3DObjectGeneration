@@ -539,7 +539,7 @@ public class MeshGeneratorQuad : MonoBehaviour
 
         if (this.m_HalfEdgeMesh != null)
         {
-            //this.m_HalfEdgeMesh.DrawGizmos(this.m_DisplayMeshVertices, this.m_DisplayMeshEdges, this.m_DisplayMeshFaces, transform);
+            this.m_HalfEdgeMesh.DrawGizmos(this.m_DisplayMeshVertices, this.m_DisplayMeshEdges, this.m_DisplayMeshFaces, transform);
         }
 
         Mesh mesh = m_Mf.mesh;

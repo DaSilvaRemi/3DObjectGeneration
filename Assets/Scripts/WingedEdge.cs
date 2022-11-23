@@ -332,7 +332,6 @@ namespace WingedEdge
                 for (int i = 0; i < this.vertices.Count; i++)
                 {
                     Vector3 worldPos = transform.TransformPoint(vertices[i].position);
-                    Gizmos.DrawSphere(worldPos, 0.1f);
                     Handles.Label(worldPos, i.ToString(), style);
                 }
             }
