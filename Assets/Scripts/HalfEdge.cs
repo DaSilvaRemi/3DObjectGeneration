@@ -293,6 +293,37 @@ namespace HalfEdge
 
             //Debug.Log(myDebug);
         }
+
+        /// <summary>
+        /// Récupère tout les edges physiques
+        /// 
+        /// C'est à dire que chaque edge est unique et ne comporte donc pas de twin
+        /// </summary>
+        public List<HalfEdge> GetPhysicalEdges()
+        {
+            Dictionary<int, HalfEdge> physicalEdges = new Dictionary<int, HalfEdge>();
+
+            for (int i = 0; i < this.edges.Count; i++)
+            {
+                HalfEdge currentHalfEdge = this.edges[i];
+
+                bool isExist = physicalEdges.ContainsKey(currentHalfEdge.index);
+
+                if (currentHalfEdge.twinEdge != null)
+                {
+                    isExist |= physicalEdges.ContainsKey(currentHalfEdge.twinEdge.index);
+                }
+
+                if (!isExist)
+                {
+                    physicalEdges.Add(currentHalfEdge.index, currentHalfEdge);
+                }
+            }
+
+            return physicalEdges.Values.ToList();
+        }
+
+
         public Mesh ConvertToFaceVertexMesh()
         {
             Mesh newMesh = new Mesh();
@@ -447,6 +478,7 @@ namespace HalfEdge
             List<Vector3> vertexPoints;
 
             this.CatmullClarkCreateNewPoints(out facePoints, out edgePoints, out vertexPoints);
+            List<HalfEdge> physicalEdges = this.GetPhysicalEdges();
 
             // Mise à jour des nouvelles positions
             for (int i = 0; i < vertexPoints.Count; i++)
@@ -457,7 +489,7 @@ namespace HalfEdge
             // Split des edges
             for (int i = 0; i < edgePoints.Count; i++)
             {
-                HalfEdge edge = this.edges[i];
+                HalfEdge edge = physicalEdges[i];
                 this.SplitEdge(edge, edgePoints[i]);
             }
 
@@ -650,6 +682,8 @@ namespace HalfEdge
                 edge.twinEdge.nextEdge.prevEdge = twinEdgePoint;
                 edge.twinEdge.nextEdge = twinEdgePoint;
                 edgePoint.twinEdge = edge.twinEdge;
+                edge.twinEdge.twinEdge = edgePoint;
+                edge.twinEdge = twinEdgePoint;
 
                 this.edges.Add(twinEdgePoint);
                 this.edges[edgePoint.index] = edgePoint;
