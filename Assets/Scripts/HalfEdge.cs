@@ -53,11 +53,12 @@ namespace HalfEdge
             this.position = pos;
             this.outgoingEdge = outgoingEdge;
         }
+
         public List<HalfEdge> GetAdjacentEdges(List<HalfEdge> edges)
         {
             List<HalfEdge> adjacentEdges = new List<HalfEdge>();
 
-            // Pour chaque edge on récupère les edges adjacentes à la vertices
+            // Pour chaque edge on récupère les edges adjacentes à la vertice
             foreach (HalfEdge edge in edges)
             {
                 // Si l'edge actuel ou la next edge à comme source vertex la vertices alors elle est adjacente
@@ -73,6 +74,23 @@ namespace HalfEdge
             }
             return adjacentEdges;
         }
+
+        //public List<HalfEdge> GetAdjacentEdges(List<HalfEdge> edges)
+        //{
+        //    List<HalfEdge> adjacentEdges = new List<HalfEdge>();
+
+        //    // Pour chaque edge on récupère les edges adjacentes à la vertice
+        //    foreach (HalfEdge edge in edges)
+        //    {
+        //        // Si l'edge actuel ou la next edge à comme source vertex la vertices alors elle est adjacente
+        //        if (edge.sourceVertex == this && !adjacentEdges.Contains(edge))
+        //        {
+        //            adjacentEdges.Add(edge);
+        //            adjacentEdges.Add(edge.twinEdge); // soit la twin, soit null
+        //        }
+        //    }
+        //    return adjacentEdges;
+        //}
 
         public List<Face> GetAdjacentFaces(List<HalfEdge> edges)
         {
@@ -93,6 +111,25 @@ namespace HalfEdge
             }
             return adjacentFaces.Values.ToList();
         }
+
+        //public List<Face> GetAdjacentFaces(List<HalfEdge> edges)
+        //{
+        //    //Dictionary<int, Face> adjacentFaces = new Dictionary<int, Face>();
+        //    List<Face> adjacentFaces = new List<Face>();
+
+        //    List<HalfEdge> adjacentEdges = this.GetAdjacentEdges(edges);
+
+        //    for (int i = 0; i < adjacentEdges.Count; i += 2)
+        //    {
+        //        HalfEdge edge = adjacentEdges[i];
+
+        //        if (edge.sourceVertex == this)
+        //        {
+        //            adjacentFaces.Add(edge.face);
+        //        }
+        //    }
+        //    return adjacentFaces;
+        //}
     }
     public class Face
     {
@@ -120,27 +157,27 @@ namespace HalfEdge
             faceVertices = new List<Vertex>();
             faceEdges = new List<HalfEdge>();
 
-            HalfEdge he = this.edge.prevEdge;
+            HalfEdge he = this.edge;
             do
             {
                 faceVertices.Add(he.sourceVertex);
                 faceEdges.Add(he);
                 he = he.nextEdge;
             }
-            while (this.edge.prevEdge != he);
+            while (this.edge != he);
         }
 
         public List<Vertex> GetVertices()
         {
             List<Vertex> faceVertices = new List<Vertex>();
 
-            HalfEdge he = this.edge.prevEdge;
+            HalfEdge he = this.edge;
             do
             {
                 faceVertices.Add(he.sourceVertex);
                 he = he.nextEdge;
             }
-            while (this.edge.prevEdge != he);
+            while (this.edge != he);
 
             return faceVertices;
         }
@@ -478,8 +515,7 @@ namespace HalfEdge
             List<Vector3> vertexPoints;
 
             this.CatmullClarkCreateNewPoints(out facePoints, out edgePoints, out vertexPoints);
-            List<HalfEdge> physicalEdges = this.GetPhysicalEdges();
-
+      
             // Mise à jour des nouvelles positions
             for (int i = 0; i < vertexPoints.Count; i++)
             {
@@ -489,21 +525,17 @@ namespace HalfEdge
             // Split des edges
             for (int i = 0; i < edgePoints.Count; i++)
             {
-                HalfEdge edge = physicalEdges[i];
+                HalfEdge edge = this.edges[i];
                 this.SplitEdge(edge, edgePoints[i]);
             }
 
             // Split des faces
+            List<Face> faceCopy = new List<Face>(this.faces);
             for (int i = 0; i < facePoints.Count; i++)
             {
-                Face face = this.faces[i];
+                Face face = faceCopy[i];
                 this.SplitFace(face, facePoints[i]);
             }
-
-            // Remise en place de toutes les vertices, edges et faces dans le tableau
-            //this.vertices.OrderBy(v => v.index);
-            //this.faces.OrderBy(f => f.index);
-            //this.edges.OrderBy(e => e.index);
         }
 
         /// <summary>
@@ -531,7 +563,7 @@ namespace HalfEdge
                     mean += facesVertices[j].position;
                 }
 
-                mean /= (float)facesVertices.Count;
+                mean /= (float) facesVertices.Count;
                 facePoints.Add(mean);
 
             }
@@ -546,15 +578,12 @@ namespace HalfEdge
                 // Midpoint
                 Vector3 midPoint = (Vstart + Vend) / 2;
 
-                if (!midPoints.Contains(midPoint))
-                {
-                    midPoints.Add(midPoint);
-                }
+                midPoints.Add(midPoint);
 
                 // Edgepoint
                 Vector3 mean = midPoint; // par défaut (sera utilisé si bordure)
 
-                // Si on est pas en borduresnous calculons l'edge point
+                // Si on est pas en bordures nous calculons l'edge point
                 if (edge.twinEdge != null)
                 {
                     int indexC0 = edge.face.index;
@@ -567,34 +596,18 @@ namespace HalfEdge
                     mean = (Vstart + Vend + C0 + C1) / 4;
                 }
 
-                if (!edgePoints.Contains(mean))
-                {
-                    edgePoints.Add(mean);
-                }
+                edgePoints.Add(mean);
             }
 
             // Pour chaque vertices on récupère les faces adjacentes et les edges adjacentes
             for (int i = 0; i < this.vertices.Count; i++)
             {
-                Vertex v = this.vertices[i];
-                List<Face> adjacentFaces = v.GetAdjacentFaces(this.edges);
-                List<HalfEdge> adjacentEdges = v.GetAdjacentEdges(this.edges);
+                Vertex currVert = this.vertices[i];
+                List<Face> adjacentFaces = currVert.GetAdjacentFaces(this.edges);
+                List<HalfEdge> adjacentEdges = currVert.GetAdjacentEdges(this.edges);
 
                 Vector3 meanFacePoint = Vector3.zero;
                 Vector3 meanMidPoint = Vector3.zero;
-
-                // Debug.Log("adjacentFaces.Count = " + adjacentFaces.Count + " ; adjacentEdges.Count = " + adjacentEdges.Count);
-                // Debug.Log("facePoints.Count = " + facePoints.Count + " ; midPoints.Count = " + midPoints.Count);
-
-                // Debug.Log("facePoints :");
-                // foreach (var item in facePoints){
-                //     Debug.Log(item);
-                // }
-
-                // Debug.Log("midPoints :");
-                // foreach (var item in midPoints){
-                //     Debug.Log(item);
-                // }
 
                 // On calcule la somme des facesPoints adjacents
                 for (int j = 0; j < adjacentFaces.Count; j++)
@@ -616,24 +629,22 @@ namespace HalfEdge
                     // Midpoint
                     Vector3 midPoint = (Vstart + Vend) / 2;
                     meanMidPoint += midPoint;
-                    // Debug.Log(meanFacePoint);
                 }
 
                 Vector3 V = Vector3.zero;
                 // Si on n'a aucune edge en bordure alors on est à l'intérieur donc on calcul V avec Q, R et V
                 if (!adjacentEdges.Contains(null))
                 {
-                    int n = (adjacentEdges.Count / 2);
+                    int n = adjacentEdges.Count;
                     Vector3 Q = meanFacePoint / (float)adjacentFaces.Count;
-                    Vector3 R = meanMidPoint / (float)n;
-                    Vector3 V_before = v.position;
+                    Vector3 R = meanMidPoint / (float) n;
 
-                    V = (1.0f / n) * Q + (2.0f / n) * R + ((n - 3.0f) / (float)n) * V_before;
+                    V = ((1.0f * Q ) / n)  + ((2.0f * R )/ n) + ((n - 3.0f) / (float) n) * currVert.position;
                 }
                 // Sinon on est en bordures alors V est égal à la moyenne  des midspoints et de V
                 else
                 {
-                    int nbBordures = 0;
+
                     Vector3 midPointSum = Vector3.zero;
 
                     for (int j = 1; j < adjacentEdges.Count; j += 2)
@@ -644,10 +655,9 @@ namespace HalfEdge
                         if (twin == null)
                         {
                             midPointSum += midPoints[edge.index];
-                            nbBordures++;
                         }
                     }
-                    V = midPointSum / (float)nbBordures;
+                    V = (midPointSum + currVert.position ) / 3;
                 }
 
                 vertexPoints.Add(V);
@@ -690,6 +700,31 @@ namespace HalfEdge
             }
         }
 
+        //public void SplitEdge(HalfEdge edge, Vector3 splittingPoint)
+        //{
+        //    // On créer le edge point
+        //    Vertex edgePointVertex = new Vertex(this.vertices.Count, splittingPoint);
+        //    HalfEdge edgePoint = new HalfEdge(this.edges.Count, edgePointVertex, edge.face, edge, edge.nextEdge, null);
+
+        //    edge.nextEdge = edgePoint;
+
+        //    this.vertices.Add(edgePointVertex);
+        //    this.edges.Add(edgePoint);
+
+        //    if (edge.twinEdge != null)
+        //    {
+        //        HalfEdge twinEdgePoint = new HalfEdge(this.edges.Count, edgePointVertex, edge.twinEdge.face, edge.twinEdge, edge.twinEdge.nextEdge, edge);
+
+        //        edgePoint.twinEdge = edge.twinEdge;
+
+        //        edge.twinEdge.twinEdge = edgePoint;
+        //        edge.twinEdge = twinEdgePoint;
+
+        //        this.edges.Add(twinEdgePoint);
+        //        this.edges[edgePoint.index] = edgePoint;
+        //    }
+        //}
+
         /// <summary>
         /// 
         /// </summary>
@@ -708,19 +743,19 @@ namespace HalfEdge
             int indexHalfEdge = this.edges.Count; // On prend l'index de l'EDGE finale
             int oldFaceSize = indexFace;
 
-/*
-get edges // est pair
-parcourir edges
-    créer new face (4 edges, 2 premieres sont2 successives de la liste des edges we got, et 2 autres nouvelles à créer  et qui s'appuient surle centroide)
-à partir de la liste des edges on a toutes les infos pour reconnecter les choses
+            /*
+            get edges // est pair
+            parcourir edges
+                créer new face (4 edges, 2 premieres sont2 successives de la liste des edges we got, et 2 autres nouvelles à créer  et qui s'appuient surle centroide)
+            à partir de la liste des edges on a toutes les infos pour reconnecter les choses
 
-*/
+            */
             do
             {
                 // Récupération des edges points
                 HalfEdge prevEdge = currentEdge.prevEdge;
                 HalfEdge nextEdge = currentEdge.nextEdge;
-                
+
                 // // Création des nouvelles faces et des nouveaux edges
                 Face currentFace = indexFace == oldFaceSize ? face : new Face(indexFace);
 
