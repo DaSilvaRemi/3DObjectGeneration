@@ -186,13 +186,13 @@ namespace HalfEdge
         {
             List<HalfEdge> faceEdges = new List<HalfEdge>();
 
-            HalfEdge he = this.edge.prevEdge;
+            HalfEdge he = this.edge;
             do
             {
                 faceEdges.Add(he);
                 he = he.nextEdge;
             }
-            while (this.edge.prevEdge != he);
+            while (this.edge != he);
             return faceEdges;
         }
     }
