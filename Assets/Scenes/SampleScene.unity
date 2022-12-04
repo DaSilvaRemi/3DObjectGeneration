@@ -427,7 +427,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_DisplayMeshInfo: 1
   m_DisplayMeshEdges: 1
-  m_DisplayMeshVertices: 1
+  m_DisplayMeshVertices: 0
   m_DisplayMeshFaces: 0
   m_DoCatmullClarck: 1
   m_NbSubdivision: 3
@@ -792,7 +792,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_DisplayMeshInfo: 1
   m_DisplayMeshEdges: 1
-  m_DisplayMeshVertices: 1
+  m_DisplayMeshVertices: 0
   m_DisplayMeshFaces: 0
   m_DoCatmullClarck: 1
   m_NbSubdivision: 1
@@ -1033,7 +1033,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_DisplayMeshInfo: 1
   m_DisplayMeshEdges: 1
-  m_DisplayMeshVertices: 1
+  m_DisplayMeshVertices: 0
   m_DisplayMeshFaces: 0
   m_DoCatmullClarck: 1
   m_NbSubdivision: 2
@@ -1190,7 +1190,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_DisplayMeshInfo: 1
   m_DisplayMeshEdges: 1
-  m_DisplayMeshVertices: 1
+  m_DisplayMeshVertices: 0
   m_DisplayMeshFaces: 0
   m_DoCatmullClarck: 1
   m_NbSubdivision: 4

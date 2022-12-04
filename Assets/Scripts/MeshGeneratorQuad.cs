@@ -29,7 +29,7 @@ public class MeshGeneratorQuad : MonoBehaviour
     void Start()
     {
         m_Mf = GetComponent<MeshFilter>();
-        m_Mf.mesh = CreateStrip(1, new Vector3(.5f, .5f, .5f));
+        //m_Mf.mesh = CreateStrip(1, new Vector3(.5f, .5f, .5f));
         //m_Mf.mesh = this.CreateGridXZ(2, 2, new Vector3(.5f, .5f, .5f));
         //m_Mf.mesh = this.CreateNormalizedG (ridXZ(6, 6); -
         /*m_Mf.mesh = this.CreateNormalizedGridXZ(30, 5, (kX, kZ) =>
@@ -117,7 +117,7 @@ public class MeshGeneratorQuad : MonoBehaviour
         //     }
         //     );
 
-        //m_Mf.mesh = CreateBox(new Vector3(1, 1, 1));
+        m_Mf.mesh = CreateBox(new Vector3(1, 1, 1));
         //m_Mf.mesh = CreateChips(new Vector3(2, 2, 2));
         //m_Mf.mesh = this.CreateRegularPolygon(new Vector3(8, 0, 8), 20);
         //m_Mf.mesh = this.CreatePacman(new Vector3(8, 0, 8), 20);
