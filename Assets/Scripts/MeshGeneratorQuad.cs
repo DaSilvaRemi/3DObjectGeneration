@@ -30,7 +30,7 @@ public class MeshGeneratorQuad : MonoBehaviour
     {
         m_Mf = GetComponent<MeshFilter>();
         //m_Mf.mesh = CreateStrip(1, new Vector3(.5f, .5f, .5f));
-        //m_Mf.mesh = this.CreateGridXZ(2, 2, new Vector3(.5f, .5f, .5f));
+        //m_Mf.mesh = this.CreateGridXZ(20, 20, new Vector3(.5f, .5f, .5f));
         //m_Mf.mesh = this.CreateNormalizedG (ridXZ(6, 6); -
         /*m_Mf.mesh = this.CreateNormalizedGridXZ(30, 5, (kX, kZ) =>
         {
@@ -117,22 +117,28 @@ public class MeshGeneratorQuad : MonoBehaviour
         //     }
         //     );
 
-        m_Mf.mesh = CreateBox(new Vector3(1, 1, 1));
-        //m_Mf.mesh = CreateChips(new Vector3(2, 2, 2));
+        //m_Mf.mesh = CreateBox(new Vector3(1, 1, 1));
+        m_Mf.mesh = CreateChips(new Vector3(2, 2, 2));
         //m_Mf.mesh = this.CreateRegularPolygon(new Vector3(8, 0, 8), 20);
         //m_Mf.mesh = this.CreatePacman(new Vector3(8, 0, 8), 20);
+        //m_Mf.mesh = this.CreateDiamond(new Vector3(4, 8, 4));
+        //m_Mf.mesh = this.CreateDiamondWithHoles(new Vector3(4, 8, 4));
+
+        // m_Mf.mesh = this.CreateDiamond(new Vector3(4, 8, 4));
+        
 
         //this.m_WingedEdgeMesh = new WingedEdgeMesh(m_Mf.mesh);
         //GUIUtility.systemCopyBuffer = this.m_WingedEdgeMesh.ConvertToCSVFormat("\t");
         //this.m_Mf.mesh = this.m_WingedEdgeMesh.ConvertToFaceVertexMesh();
 
         this.m_HalfEdgeMesh = new HalfEdgeMesh(m_Mf.mesh);
-        
-        if(this.m_DoCatmullClarck){
+
+        if (this.m_DoCatmullClarck)
+        {
             this.m_HalfEdgeMesh.SubdivideCatmullClark(this.m_NbSubdivision);
         }
-        
-        
+
+
         GUIUtility.systemCopyBuffer = this.m_HalfEdgeMesh.ConvertToCSVFormat("\t");
         this.m_Mf.mesh = this.m_HalfEdgeMesh.ConvertToFaceVertexMesh();
         Debug.Log(this.m_HalfEdgeMesh.ConvertToCSVFormat("\t"));
@@ -249,7 +255,7 @@ public class MeshGeneratorQuad : MonoBehaviour
         }
 
         mesh.vertices = vertices;
-        mesh.SetIndices(quads, MeshTopology.Quads, 0); ;
+        mesh.SetIndices(quads, MeshTopology.Quads, 0);
 
         return mesh;
     }
@@ -421,6 +427,145 @@ public class MeshGeneratorQuad : MonoBehaviour
         quads[9] = 1;
         quads[10] = 0;
         quads[11] = 5;
+
+        mesh.vertices = vertices;
+        mesh.SetIndices(quads, MeshTopology.Quads, 0);
+
+        return mesh;
+    }
+
+    Mesh CreateDiamond(Vector3 halfSize)
+    {
+        Mesh mesh = new Mesh();
+        mesh.name = "diamond";
+
+		Vector3[] vertices = new Vector3[10];
+        int[] quads = new int[8 * 4];
+
+        // TOP
+        vertices[0] = new Vector3(0, halfSize.y, 0);
+
+		// Intermediate quad
+        vertices[1] = new Vector3(halfSize.x, 0, halfSize.z);
+        vertices[2] = new Vector3(halfSize.x, 0, 0);
+        vertices[3] = new Vector3(halfSize.x, 0, -halfSize.z);
+        vertices[4] = new Vector3(0, 0, -halfSize.z);
+        vertices[5] = new Vector3(-halfSize.x, 0, -halfSize.z);
+        vertices[6] = new Vector3(-halfSize.x, 0, 0);
+        vertices[7] = new Vector3(-halfSize.x, 0, halfSize.z);
+        vertices[8] = new Vector3(0, 0, halfSize.z);
+
+		// Bottom
+		vertices[9] = new Vector3(0, -halfSize.y, 0);
+
+		// UPPER 3D TRIANGLE
+        quads[0] = 0;
+        quads[1] = 1;
+        quads[2] = 2;
+        quads[3] = 3;
+
+        quads[4] = 0;
+        quads[5] = 3;
+        quads[6] = 4;
+        quads[7] = 5;
+
+        quads[8] = 0;
+        quads[9] = 5;
+        quads[10] = 6;
+        quads[11] = 7;
+
+        quads[12] = 0;
+        quads[13] = 7;
+        quads[14] = 8;
+        quads[15] = 1;
+
+		// Bottom Triangle
+        quads[16] = 9;
+        quads[17] = 3;
+        quads[18] = 2;
+        quads[19] = 1;
+
+        quads[20] = 9;
+        quads[21] = 5;
+        quads[22] = 4;
+        quads[23] = 3;
+
+        quads[24] = 9;
+        quads[25] = 7;
+        quads[26] = 6;
+        quads[27] = 5;
+
+		quads[28] = 9;
+        quads[29] = 1;
+        quads[30] = 8;
+        quads[31] = 7;
+
+        mesh.vertices = vertices;
+        mesh.SetIndices(quads, MeshTopology.Quads, 0);
+
+        return mesh;
+    }
+
+	Mesh CreateDiamondWithHoles(Vector3 halfSize)
+    {
+        Mesh mesh = new Mesh();
+        mesh.name = "diamond_hole";
+
+		Vector3[] vertices = new Vector3[10];
+        int[] quads = new int[6 * 4];
+
+        // TOP
+        vertices[0] = new Vector3(0, halfSize.y, 0);
+
+		// Intermediate quad
+        vertices[1] = new Vector3(halfSize.x, 0, halfSize.z);
+        vertices[2] = new Vector3(halfSize.x, 0, 0);
+        vertices[3] = new Vector3(halfSize.x, 0, -halfSize.z);
+        vertices[4] = new Vector3(0, 0, -halfSize.z);
+        vertices[5] = new Vector3(-halfSize.x, 0, -halfSize.z);
+        vertices[6] = new Vector3(-halfSize.x, 0, 0);
+        vertices[7] = new Vector3(-halfSize.x, 0, halfSize.z);
+        vertices[8] = new Vector3(0, 0, halfSize.z);
+
+		// Bottom
+		vertices[9] = new Vector3(0, -halfSize.y, 0);
+
+		// UPPER 3D TRIANGLE
+        quads[0] = 0;
+        quads[1] = 1;
+        quads[2] = 2;
+        quads[3] = 3;
+
+        // quads[4] = 0;
+        // quads[5] = 3;
+        // quads[6] = 4;
+        // quads[7] = 5;
+
+        quads[4] = 0;
+        quads[5] = 5;
+        quads[6] = 6;
+        quads[7] = 7;
+
+        quads[8] = 0;
+        quads[9] = 7;
+        quads[10] = 8;
+        quads[11] = 1;
+
+		// Bottom Triangle
+        quads[12] = 9;
+        quads[13] = 3;
+        quads[14] = 2;
+        quads[15] = 1;
+
+        quads[16] = 9;
+        quads[17] = 5;
+        quads[18] = 4;
+        quads[19] = 3;
+
+        quads[20] = 9;
+        quads[21] = 7;
+        quads[22] = 6;
+        quads[23] = 5;
 
         mesh.vertices = vertices;
         mesh.SetIndices(quads, MeshTopology.Quads, 0);

@@ -303,7 +303,7 @@ namespace HalfEdge
                 for (int j = 0; j < nVerticesForTopology; j++)
                 {
                     int startIndex = this.edges[cmp].sourceVertex.index;
-                    int endIndex = this.edges[cmp].nextEdge.sourceVertex.index;//(((compteur + 1) % nVerticesForTopology) != 0) ? compteur + 1 : (compteur - nVerticesForTopology + 1);
+                    int endIndex = this.edges[cmp].nextEdge.sourceVertex.index;
                     // Debug.Log("Test: " + startIndex + " : " + endIndex);
                     string newKey = startIndex + "|" + endIndex;
                     //listOfIndex.Add(newKey);
