@@ -54,6 +54,11 @@ namespace HalfEdge
             this.outgoingEdge = outgoingEdge;
         }
 
+        /// <summary>
+        /// Get the adjacent edges of the vertex
+        /// </summary>
+        /// <param name="edges">Meshedges</param>
+        /// <returns>adjacent edges</returns>
         public List<HalfEdge> GetAdjacentEdges(List<HalfEdge> edges)
         {
             List<HalfEdge> adjacentEdges = new List<HalfEdge>();
@@ -75,6 +80,11 @@ namespace HalfEdge
             return adjacentEdges;
         }
 
+        /// <summary>
+        /// Get the incident edges of the vertex
+        /// </summary>
+        /// <param name="edges">Meshedges</param>
+        /// <returns>incident edges</returns>
         public List<HalfEdge> GetIncidentEdges(List<HalfEdge> edges)
         {
             List<HalfEdge> incidentEdges = new List<HalfEdge>();
@@ -95,23 +105,11 @@ namespace HalfEdge
             return incidentEdges;
         }
 
-        //public List<HalfEdge> GetAdjacentEdges(List<HalfEdge> edges)
-        //{
-        //    List<HalfEdge> adjacentEdges = new List<HalfEdge>();
-
-        //    // Pour chaque edge on récupère les edges adjacentes à la vertice
-        //    foreach (HalfEdge edge in edges)
-        //    {
-        //        // Si l'edge actuel ou la next edge à comme source vertex la vertices alors elle est adjacente
-        //        if (edge.sourceVertex == this && !adjacentEdges.Contains(edge))
-        //        {
-        //            adjacentEdges.Add(edge);
-        //            adjacentEdges.Add(edge.twinEdge); // soit la twin, soit null
-        //        }
-        //    }
-        //    return adjacentEdges;
-        //}
-
+        /// <summary>
+        /// Get the adjacent faces of the vertex
+        /// </summary>
+        /// <param name="edges">Meshedges</param>
+        /// <returns>adjacent faces</returns>
         public List<Face> GetAdjacentFaces(List<HalfEdge> edges)
         {
             Dictionary<int, Face> adjacentFaces = new Dictionary<int, Face>();
@@ -131,25 +129,6 @@ namespace HalfEdge
             }
             return adjacentFaces.Values.ToList();
         }
-
-        //public List<Face> GetAdjacentFaces(List<HalfEdge> edges)
-        //{
-        //    //Dictionary<int, Face> adjacentFaces = new Dictionary<int, Face>();
-        //    List<Face> adjacentFaces = new List<Face>();
-
-        //    List<HalfEdge> adjacentEdges = this.GetAdjacentEdges(edges);
-
-        //    for (int i = 0; i < adjacentEdges.Count; i += 2)
-        //    {
-        //        HalfEdge edge = adjacentEdges[i];
-
-        //        if (edge.sourceVertex == this)
-        //        {
-        //            adjacentFaces.Add(edge.face);
-        //        }
-        //    }
-        //    return adjacentFaces;
-        //}
     }
     public class Face
     {
@@ -172,6 +151,11 @@ namespace HalfEdge
             this.edge = _edge;
         }
 
+        /// <summary>
+        /// Récupère les edges et les vertices
+        /// </summary>
+        /// <param name="faceVertices">A list that will contain the vertices</param>
+        /// <param name="faceEdges">A list that will contain the edges</param>
         public void GetEdgesVertices(out List<Vertex> faceVertices, out List<HalfEdge> faceEdges)
         {
             faceVertices = new List<Vertex>();
@@ -187,6 +171,10 @@ namespace HalfEdge
             while (this.edge != he);
         }
 
+        /// <summary>
+        /// Récupère toutes les vertices de la face
+        /// </summary>
+        /// <returns>Les vertices de la face</returns>
         public List<Vertex> GetVertices()
         {
             List<Vertex> faceVertices = new List<Vertex>();
@@ -202,6 +190,10 @@ namespace HalfEdge
             return faceVertices;
         }
 
+        /// <summary>
+        /// Récupère toutes les edges de la face
+        /// </summary>
+        /// <returns>Les edges de la face</returns>
         public List<HalfEdge> GetEdges()
         {
             List<HalfEdge> faceEdges = new List<HalfEdge>();
@@ -224,24 +216,27 @@ namespace HalfEdge
 
         public int nVerticesForTopology;
 
+        /// <summary>
+        /// Constructeur naturel
+        /// </summary>
+        /// <param name="mesh">mesh Vertex-Face</param>
         public HalfEdgeMesh(Mesh mesh)
         {
-            // constructeur prenant un mesh Vertex-Face en paramètre
             this.vertices = new List<Vertex>();
             this.edges = new List<HalfEdge>();
             this.faces = new List<Face>();
             Vector3[] meshVertices = mesh.vertices;
 
-            //List<string> listOfIndex = new List<string>();
             Dictionary<string, int> mapOfIndex = new Dictionary<string, int>();
 
+            // Pour chaque vertices du mesh on l'ajoute au tableau des vertices
             for (int i = 0; i < mesh.vertexCount; i++)
             {
                 this.vertices.Add(new Vertex(i, meshVertices[i]));
             }
 
+            // Récupération des shapes(quads/triangles) + Définition de la topology du mesh
             int[] shapes = mesh.GetIndices(0);
-
             MeshTopology meshTopology = mesh.GetTopology(0);
             this.nVerticesForTopology = meshTopology.Equals(MeshTopology.Triangles) ? 3 : 4;
 
@@ -249,28 +244,23 @@ namespace HalfEdge
             int indexHalfEdge = 0;
             int nbFaces = shapes.Length / nVerticesForTopology;
 
+            // Pour chaque forme on récupère la fae
             int cmp = 0;
-
             for (int i = 0; i < nbFaces; i++)
             {
                 Face f = new Face(i);
                 List<HalfEdge> tempHalfEdges = new List<HalfEdge>();
 
+                // Pour chaque face on récupère les vertex correspondantes, on créer l'edge et on l'ajoute à un tableau temporaire
                 for (int j = 0; j < nVerticesForTopology; j++)
                 {
                     Vertex v = this.vertices[shapes[indexVertex++]];
                     HalfEdge he = new HalfEdge(indexHalfEdge++, v, f);
                     tempHalfEdges.Add(he);
-
-
-                    //long startIndex = indexVertex;
-                    //long endIndex = (indexVertex < nVerticesForTopology - 1) ? indexVertex : 0;
-                    //long key = startIndex + (endIndex << 32);
-                    //mapHalfEdges.Add(key, he);
                 }
 
-                int nbTempHalfEdge = tempHalfEdges.Count;
-
+                // Pour chaque edge créé on défini les prev et les next puis on l'ajoute aux edges du HalfEdge
+                int nbTempHalfEdge = tempHalfEdges.Count; 
                 for (int j = 0; j < nbTempHalfEdge; j++)
                 {
                     HalfEdge currentHE = tempHalfEdges[j];
@@ -280,33 +270,18 @@ namespace HalfEdge
                     currentHE.prevEdge = tempHalfEdges[previousEdgeIndice];
                     currentHE.nextEdge = tempHalfEdges[nextEdgeIndice];
 
-
-                    // // Modification de la twin edge si elle existe
-                    // HalfEdge he1;
-                    // int startIndex = currentHE.sourceVertex.index;
-                    // long endIndex = currentHE.nextEdge.sourceVertex.index;
-                    // // long keyReversed = endIndex + (startIndex << 32);
-                    // if (mapHalfEdges.TryGetValue(keyReversed, out he))
-                    // {
-                    //     // Imaginons 0->1 et sa twin 1->0
-                    //     // La keyReversed de currentHE sera donc 1 + 0<<32 (pseudo-code)
-                    //     // Si cette HalfEdge existe, ça veut dire qu'on a trouvé la twin de notre currentHE
-                    //     // On lui applique donc sa twin.
-                    //     // Pour ce qui est de la twin de la twin, elle sera appliquée dans une autre itération de la boucle for
-                    //     currentHE.twinEdge = he;
-                    // }
-
                     currentHE.sourceVertex.outgoingEdge = currentHE;
                     this.edges.Add(currentHE);
                 }
 
+                // Pour le nombre d'edges crée = au nombr de vertices on l'ajoute dans un dictionnaire contenant les indices des vertices de l'edge pour les twins
                 for (int j = 0; j < nVerticesForTopology; j++)
                 {
+                    // Concaténation de l'indice de  la start et de l'end vertex pour créer la clé
                     int startIndex = this.edges[cmp].sourceVertex.index;
                     int endIndex = this.edges[cmp].nextEdge.sourceVertex.index;
-                    // Debug.Log("Test: " + startIndex + " : " + endIndex);
+               
                     string newKey = startIndex + "|" + endIndex;
-                    //listOfIndex.Add(newKey);
                     mapOfIndex.Add(newKey, this.edges[cmp].index);
 
                     cmp++;
@@ -315,72 +290,33 @@ namespace HalfEdge
                 this.faces.Add(f);
             }
 
-            string myDebug = "";
+            // A parti des indices concaténer on va essayer de trouver pour chacun d'eux si on arrive à trouver l'edge retour
+            // Exemple si j'ai une edge allant de 0 à 1 est-ce-que j'ai une edge allant de 1 à 0, alors la deuxième est la twin de la première
             foreach (KeyValuePair<string, int> kp in mapOfIndex)
             {
                 string key = kp.Key;
                 int value = kp.Value;
-                //Debug.Log("List of index : " + listOfIndex.ToString());
+
+                // Récupération des index des vertices
                 int startIndex = int.Parse(key.Split("|")[0]);
                 int endIndex = int.Parse(key.Split("|")[1]);
-                // Debug.Log("" + startIndex + " : " + endIndex);
+                // On essaye de trouver la clé inverse
                 string reversedKey = "" + endIndex + "|" + startIndex;
 
-                myDebug += key + " => " + value + "\n";
                 int reversedValue;
+                // Si on trouve une edge passant par les mêmes vertices alors on définit la twin
                 if (mapOfIndex.TryGetValue(reversedKey, out reversedValue))
                 {
-
-
                     this.edges[reversedValue].twinEdge = this.edges[value];
                     this.edges[value].twinEdge = this.edges[reversedValue];
                 }
-
-                // int out_start;
-                // // int out_end;
-                // if(listOfIndex.TryGetValue(endIndex, out out_start)){
-                //     if(out_start != startIndex)
-                //         continue;
-
-                //     // écrire ici
-                //     this.edges[endIndex].twinEdge = this.edges[out_start];
-                //     this.edges[out_start].twinEdge = this.edges[endIndex];
-                // }
             }
-
-            //Debug.Log(myDebug);
         }
 
         /// <summary>
-        /// Récupère tout les edges physiques
-        /// 
-        /// C'est à dire que chaque edge est unique et ne comporte donc pas de twin
+        /// Converti le HalfEdgeMesh en VertexFace Mesh
         /// </summary>
-        public List<HalfEdge> GetPhysicalEdges()
-        {
-            Dictionary<int, HalfEdge> physicalEdges = new Dictionary<int, HalfEdge>();
-
-            for (int i = 0; i < this.edges.Count; i++)
-            {
-                HalfEdge currentHalfEdge = this.edges[i];
-
-                bool isExist = physicalEdges.ContainsKey(currentHalfEdge.index);
-
-                if (currentHalfEdge.twinEdge != null)
-                {
-                    isExist |= physicalEdges.ContainsKey(currentHalfEdge.twinEdge.index);
-                }
-
-                if (!isExist)
-                {
-                    physicalEdges.Add(currentHalfEdge.index, currentHalfEdge);
-                }
-            }
-
-            return physicalEdges.Values.ToList();
-        }
-
-
+        /// <returns>Le mesh convertit</returns>
         public Mesh ConvertToFaceVertexMesh()
         {
             Mesh newMesh = new Mesh();
@@ -388,17 +324,20 @@ namespace HalfEdge
             Vector3[] vertices = new Vector3[this.vertices.Count];
             int[] quads = new int[faces.Count * this.nVerticesForTopology];
 
+            // On récupère la position des vertices
             foreach (Vertex v in this.vertices)
             {
                 vertices[v.index] = v.position;
             }
 
+            // On récupère chaque face
             for (int i = 0; i < faces.Count; i++)
             {
                 Face f = faces[i];
                 HalfEdge he = f.edge.prevEdge;
                 int offset = 0;
                 int j = i * this.nVerticesForTopology;
+                // On définit les quads avec un offset selon le nombre de vertices
                 do
                 {
                     quads[j + offset] = he.sourceVertex.index;
@@ -413,16 +352,17 @@ namespace HalfEdge
             newMesh.RecalculateNormals();
             return newMesh;
         }
+
+        /// <summary>
+        /// Converti le mesh en csv
+        /// </summary>
+        /// <returns>La version CSV</returns>
         public string ConvertToCSVFormat(string separator = "\t")
         {
             int tabSize = Mathf.Max(edges.Count, faces.Count, vertices.Count);
             List<string> strings = new List<string>(new string[tabSize]);
-            // Debug.Log("edges.Count = " + edges.Count);
-            // Debug.Log("faces.Count = " + faces.Count);
-            // Debug.Log("vertices.Count = " + vertices.Count);
-            // Debug.Log("tabSize = " + tabSize);
-            // Debug.Log("strings size = " + strings.Count);
 
+            // Pour chaque edge on affiche la source et l'end vertex, la prev, la next et la twin
             for (int i = 0; i < this.edges.Count; i++)
             {
                 HalfEdge he = this.edges[i];
@@ -432,12 +372,14 @@ namespace HalfEdge
                 strings[i] += he.twinEdge != null ? he.twinEdge.index : "null";
                 strings[i] += separator + separator;
             }
+
             for (int i = edges.Count; i < tabSize; i++)
             {
                 // Compléter les colonnes restantes par des separator
                 strings[i] += separator + separator + separator + separator;
             }
 
+            // Pour chaque face on affiche l'index de la face et l'index de l'edge qui lui est associé 
             for (int i = 0; i < faces.Count; i++)
             {
                 Face f = faces[i];
@@ -450,6 +392,7 @@ namespace HalfEdge
                 strings[i] += separator + separator + separator;
             }
 
+            // Pour chaque vertices on affiche la position et l'edge qui lui est associé
             for (int i = 0; i < this.vertices.Count; i++)
             {
                 Vertex vertex = this.vertices[i];
@@ -469,12 +412,20 @@ namespace HalfEdge
             return header + string.Join("\n", strings);
         }
 
+        /// <summary>
+        /// Dessine les vertices, edges, faces
+        /// </summary>
+        /// <param name="drawVertices">Booléean sur l'affichage des vertices</param>
+        /// <param name="drawEdges">Booléean sur l'affichage des edges</param>
+        /// <param name="drawFaces">Booléean sur l'affichage des faces</param>
+        /// <param name="transform">Un objet transform pour calculer la position des points</param>
         public void DrawGizmos(bool drawVertices, bool drawEdges, bool drawFaces, Transform transform)
         {
             GUIStyle style = new GUIStyle();
             style.fontSize = 15;
             style.normal.textColor = Color.red;
 
+            // Pour chaque vertices on affiche son index à sa position
             if (drawVertices)
             {
                 for (int i = 0; i < this.vertices.Count; i++)
@@ -485,7 +436,7 @@ namespace HalfEdge
             }
 
             style.normal.textColor = Color.black;
-
+            // Pour chaque edge on affiche son index à la position de son midpoint
             if (drawEdges)
             {
                 for (int i = 0; i < this.edges.Count; i++)
@@ -498,16 +449,17 @@ namespace HalfEdge
             }
 
             style.normal.textColor = Color.blue;
-
+            // Pour chaque face on affiche l'ensemble de ces vertices et l'index de la face
             if (drawFaces)
             {
                 for (int i = 0; i < this.faces.Count; i++)
                 {
                     HalfEdge e = this.faces[i].edge;
-                    Vector3 p0 = e.sourceVertex.position;
-                    Vector3 p1 = e.nextEdge.sourceVertex.position;
-                    Vector3 p2 = e.nextEdge.nextEdge.sourceVertex.position;
+                    Vector3 p0 = transform.TransformPoint(e.sourceVertex.position);
+                    Vector3 p1 = transform.TransformPoint(e.nextEdge.sourceVertex.position);
+                    Vector3 p2 = transform.TransformPoint(e.nextEdge.nextEdge.sourceVertex.position);
                     Vector3 p3 = this.nVerticesForTopology > 3 ? e.nextEdge.nextEdge.nextEdge.sourceVertex.position : Vector3.zero;
+                    p3 = transform.TransformPoint(p3);
 
                     int index1 = e.index;
                     int index2 = e.nextEdge.index;
@@ -520,6 +472,10 @@ namespace HalfEdge
             }
         }
 
+        /// <summary>
+        /// Effectue n nombre de subdivisions
+        /// </summary>
+        /// <param name="nbSubDiv">Nombre de subdivisions</param>
         public void SubdivideCatmullClark(int nbSubDiv)
         {
             for (int i = 0; i < nbSubDiv; i++)
@@ -528,12 +484,16 @@ namespace HalfEdge
             }
         }
 
+        /// <summary>
+        /// Effectue subdivisions
+        /// </summary>
         public void SubdivideCatmullClark()
         {
             List<Vector3> facePoints;
             List<Vector3> edgePoints;
             List<Vector3> vertexPoints;
 
+            // Creation des points
             this.CatmullClarkCreateNewPoints(out facePoints, out edgePoints, out vertexPoints);
 
             // Mise à jour des nouvelles positions
@@ -561,11 +521,11 @@ namespace HalfEdge
         }
 
         /// <summary>
-        /// 
+        /// Créer les nouveaux points et repositionne ceux déjà crée pour l'algorithme
         /// </summary>
-        /// <param name="facePoints"></param>
-        /// <param name="edgePoints"></param>
-        /// <param name="vertexPoints"></param>
+        /// <param name="facePoints">Liste de facepoints</param> 
+        /// <param name="edgePoints">Liste d'edgepoints</param>
+        /// <param name="vertexPoints">Liste de vertexpoints</param>
         public void CatmullClarkCreateNewPoints(out List<Vector3> facePoints, out List<Vector3> edgePoints, out List<Vector3> vertexPoints)
         {
             facePoints = new List<Vector3>();
@@ -718,10 +678,10 @@ namespace HalfEdge
         }
 
         /// <summary>
-        /// 
+        /// Split des face
         /// </summary>
-        /// <param name="face"></param>
-        /// <param name="splittingPoint"></param>
+        /// <param name="face"> face à splitté</param>
+        /// <param name="splittingPoint"> le point de split</param>
         public void SplitFace(Face face, Vector3 splittingPoint)
         {
             Vertex facePointVertex = new Vertex(this.vertices.Count, splittingPoint);

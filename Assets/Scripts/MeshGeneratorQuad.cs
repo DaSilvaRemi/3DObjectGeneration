@@ -10,6 +10,19 @@ using static Unity.Mathematics.math;
 delegate Vector3 ComputePosDelegate(float kX, float kZ);
 delegate float3 ComputePosDelegate_SIMD(float3 k);
 
+enum Shapes
+{
+    STRIP,
+    GRID,
+    NormalizeGRID,
+    BOX,
+    CHIPS,
+    REGULAR_POLYGON,
+    PACMAN,
+    DIAMOND,
+    DIAMOND_WITH_HOLES,
+}
+
 [RequireComponent(typeof(MeshFilter))]
 public class MeshGeneratorQuad : MonoBehaviour
 {
@@ -19,6 +32,7 @@ public class MeshGeneratorQuad : MonoBehaviour
     [SerializeField] bool m_DisplayMeshFaces = true;
     [SerializeField] bool m_DoCatmullClarck = false;
     [SerializeField] int m_NbSubdivision = 0;
+    [SerializeField] Shapes m_SelectedShapes = Shapes.BOX;
 
     [SerializeField] AnimationCurve m_Profile;
 
@@ -29,9 +43,6 @@ public class MeshGeneratorQuad : MonoBehaviour
     void Start()
     {
         m_Mf = GetComponent<MeshFilter>();
-        //m_Mf.mesh = CreateStrip(1, new Vector3(.5f, .5f, .5f));
-        //m_Mf.mesh = this.CreateGridXZ(20, 20, new Vector3(.5f, .5f, .5f));
-        //m_Mf.mesh = this.CreateNormalizedG (ridXZ(6, 6); -
         /*m_Mf.mesh = this.CreateNormalizedGridXZ(30, 5, (kX, kZ) =>
         {
             float rho, theta, phi;
@@ -117,19 +128,43 @@ public class MeshGeneratorQuad : MonoBehaviour
         //     }
         //     );
 
-        //m_Mf.mesh = CreateBox(new Vector3(1, 1, 1));
-        m_Mf.mesh = CreateChips(new Vector3(2, 2, 2));
-        //m_Mf.mesh = this.CreateRegularPolygon(new Vector3(8, 0, 8), 20);
-        //m_Mf.mesh = this.CreatePacman(new Vector3(8, 0, 8), 20);
-        //m_Mf.mesh = this.CreateDiamond(new Vector3(4, 8, 4));
-        //m_Mf.mesh = this.CreateDiamondWithHoles(new Vector3(4, 8, 4));
-
-        // m_Mf.mesh = this.CreateDiamond(new Vector3(4, 8, 4));
-        
+        switch (this.m_SelectedShapes)
+        {
+            case Shapes.STRIP:
+                m_Mf.mesh = CreateStrip(1, new Vector3(.5f, .5f, .5f));
+                break;
+            case Shapes.GRID:
+                m_Mf.mesh = this.CreateGridXZ(20, 20, new Vector3(.5f, .5f, .5f));
+                break;
+            case Shapes.NormalizeGRID:
+                m_Mf.mesh = this.CreateNormalizedGridXZ(6, 6);
+                break;
+            case Shapes.BOX:
+                m_Mf.mesh = CreateBox(new Vector3(1, 1, 1));
+                break;
+            case Shapes.CHIPS:
+                m_Mf.mesh = CreateChips(new Vector3(1, 1, 1));
+                break;
+            case Shapes.REGULAR_POLYGON:
+                m_Mf.mesh = this.CreateRegularPolygon(new Vector3(5, 0, 5), 20);
+                break;
+            case Shapes.PACMAN:
+                m_Mf.mesh = this.CreatePacman(new Vector3(5, 0, 5), 20);
+                break;
+            case Shapes.DIAMOND:
+                m_Mf.mesh = this.CreateDiamond(new Vector3(2, 2, 2));
+                break;
+            case Shapes.DIAMOND_WITH_HOLES:
+                m_Mf.mesh = this.CreateDiamondWithHoles(new Vector3(2, 2, 2));
+                break;
+            default:
+                break;
+        }
 
         //this.m_WingedEdgeMesh = new WingedEdgeMesh(m_Mf.mesh);
         //GUIUtility.systemCopyBuffer = this.m_WingedEdgeMesh.ConvertToCSVFormat("\t");
         //this.m_Mf.mesh = this.m_WingedEdgeMesh.ConvertToFaceVertexMesh();
+        //Debug.Log(this.m_WingedEdgeMesh.ConvertToCSVFormat("\t"));
 
         this.m_HalfEdgeMesh = new HalfEdgeMesh(m_Mf.mesh);
 
@@ -137,7 +172,6 @@ public class MeshGeneratorQuad : MonoBehaviour
         {
             this.m_HalfEdgeMesh.SubdivideCatmullClark(this.m_NbSubdivision);
         }
-
 
         GUIUtility.systemCopyBuffer = this.m_HalfEdgeMesh.ConvertToCSVFormat("\t");
         this.m_Mf.mesh = this.m_HalfEdgeMesh.ConvertToFaceVertexMesh();
@@ -439,13 +473,13 @@ public class MeshGeneratorQuad : MonoBehaviour
         Mesh mesh = new Mesh();
         mesh.name = "diamond";
 
-		Vector3[] vertices = new Vector3[10];
+        Vector3[] vertices = new Vector3[10];
         int[] quads = new int[8 * 4];
 
         // TOP
         vertices[0] = new Vector3(0, halfSize.y, 0);
 
-		// Intermediate quad
+        // Intermediate quad
         vertices[1] = new Vector3(halfSize.x, 0, halfSize.z);
         vertices[2] = new Vector3(halfSize.x, 0, 0);
         vertices[3] = new Vector3(halfSize.x, 0, -halfSize.z);
@@ -455,10 +489,10 @@ public class MeshGeneratorQuad : MonoBehaviour
         vertices[7] = new Vector3(-halfSize.x, 0, halfSize.z);
         vertices[8] = new Vector3(0, 0, halfSize.z);
 
-		// Bottom
-		vertices[9] = new Vector3(0, -halfSize.y, 0);
+        // Bottom
+        vertices[9] = new Vector3(0, -halfSize.y, 0);
 
-		// UPPER 3D TRIANGLE
+        // UPPER 3D TRIANGLE
         quads[0] = 0;
         quads[1] = 1;
         quads[2] = 2;
@@ -479,7 +513,7 @@ public class MeshGeneratorQuad : MonoBehaviour
         quads[14] = 8;
         quads[15] = 1;
 
-		// Bottom Triangle
+        // Bottom Triangle
         quads[16] = 9;
         quads[17] = 3;
         quads[18] = 2;
@@ -495,7 +529,7 @@ public class MeshGeneratorQuad : MonoBehaviour
         quads[26] = 6;
         quads[27] = 5;
 
-		quads[28] = 9;
+        quads[28] = 9;
         quads[29] = 1;
         quads[30] = 8;
         quads[31] = 7;
@@ -506,18 +540,18 @@ public class MeshGeneratorQuad : MonoBehaviour
         return mesh;
     }
 
-	Mesh CreateDiamondWithHoles(Vector3 halfSize)
+    Mesh CreateDiamondWithHoles(Vector3 halfSize)
     {
         Mesh mesh = new Mesh();
         mesh.name = "diamond_hole";
 
-		Vector3[] vertices = new Vector3[10];
+        Vector3[] vertices = new Vector3[10];
         int[] quads = new int[6 * 4];
 
         // TOP
         vertices[0] = new Vector3(0, halfSize.y, 0);
 
-		// Intermediate quad
+        // Intermediate quad
         vertices[1] = new Vector3(halfSize.x, 0, halfSize.z);
         vertices[2] = new Vector3(halfSize.x, 0, 0);
         vertices[3] = new Vector3(halfSize.x, 0, -halfSize.z);
@@ -527,10 +561,10 @@ public class MeshGeneratorQuad : MonoBehaviour
         vertices[7] = new Vector3(-halfSize.x, 0, halfSize.z);
         vertices[8] = new Vector3(0, 0, halfSize.z);
 
-		// Bottom
-		vertices[9] = new Vector3(0, -halfSize.y, 0);
+        // Bottom
+        vertices[9] = new Vector3(0, -halfSize.y, 0);
 
-		// UPPER 3D TRIANGLE
+        // UPPER 3D TRIANGLE
         quads[0] = 0;
         quads[1] = 1;
         quads[2] = 2;
@@ -551,7 +585,7 @@ public class MeshGeneratorQuad : MonoBehaviour
         quads[10] = 8;
         quads[11] = 1;
 
-		// Bottom Triangle
+        // Bottom Triangle
         quads[12] = 9;
         quads[13] = 3;
         quads[14] = 2;
@@ -679,12 +713,12 @@ public class MeshGeneratorQuad : MonoBehaviour
 
         if (this.m_WingedEdgeMesh != null)
         {
-            //this.m_WingedEdgeMesh.DrawGizmos(this.m_DisplayMeshVertices, this.m_DisplayMeshEdges, this.m_DisplayMeshFaces, transform);
+            this.m_WingedEdgeMesh.DrawGizmos(this.m_DisplayMeshVertices, this.m_DisplayMeshEdges, this.m_DisplayMeshFaces, transform);
         }
 
         if (this.m_HalfEdgeMesh != null)
         {
-            //this.m_HalfEdgeMesh.DrawGizmos(this.m_DisplayMeshVertices, this.m_DisplayMeshEdges, this.m_DisplayMeshFaces, transform);
+            this.m_HalfEdgeMesh.DrawGizmos(this.m_DisplayMeshVertices, this.m_DisplayMeshEdges, this.m_DisplayMeshFaces, transform);
         }
 
         Mesh mesh = m_Mf.mesh;

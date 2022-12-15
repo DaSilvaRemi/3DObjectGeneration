@@ -321,11 +321,19 @@ namespace WingedEdge
             return header + string.Join("\n", strings);
         }
 
+        /// <summary>
+        /// Dessine les vertices, edges, faces
+        /// </summary>
+        /// <param name="drawVertices">Booléean sur l'affichage des vertices</param>
+        /// <param name="drawEdges">Booléean sur l'affichage des edges</param>
+        /// <param name="drawFaces">Booléean sur l'affichage des faces</param>
+        /// <param name="transform">Un objet transform pour calculer la position des points</param>
         public void DrawGizmos(bool drawVertices, bool drawEdges, bool drawFaces, Transform transform)
         {
             GUIStyle style = new GUIStyle();
             style.fontSize = 15;
             style.normal.textColor = Color.red;
+
 
             if (drawVertices)
             {
@@ -345,7 +353,7 @@ namespace WingedEdge
                     Vector3 worldPosStart = transform.TransformPoint(this.edges[i].startVertex.position);
                     Vector3 worldPosEnd = transform.TransformPoint(this.edges[i].endVertex.position);
                     Gizmos.DrawLine(worldPosStart, worldPosEnd);
-                    Handles.Label(worldPosEnd - worldPosStart / 2, "E : " + i, style);
+                    Handles.Label((worldPosEnd + worldPosStart) / 2, "E : " + i, style);
                 }
             }
 
@@ -369,7 +377,7 @@ namespace WingedEdge
                             : current_edge.startVertex.index;
 
                         textToDisplay += indiceVertex + " ";
-                        sumPos += this.vertices[indiceVertex].position;
+                        sumPos += transform.TransformPoint(this.vertices[indiceVertex].position);
                         WingedEdge tmp = current_edge;
 
                         current_edge = (current_edge.endCWEdge != null && (current_edge.endCWEdge.index == firstEdge.index || current_edge.endCWEdge.index == previousEdge.index))
