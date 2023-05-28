@@ -1,7 +1,4 @@
-# E4FI_2023_2023_GeometricModeling_DaSilvaBailleulIvanoff
-
-E4FI-1I  -  Décembre 2022
-4I-IG3 Geometric Modeling  -  David BILEMDJIAN
+# 3D_Object_Generation
 
 Membres :
 Juan IVANOFF | Rémi DA SILVA | Valentin BAILLEUL
